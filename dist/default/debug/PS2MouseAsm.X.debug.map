@@ -1,0 +1,111 @@
+MPLINK 5.08, LINKER
+Linker Map File - Created Fri Oct 25 11:59:59 2019
+
+                                 Section Info
+                  Section       Type    Address   Location Size(Bytes)
+                ---------  ---------  ---------  ---------  ---------
+             RESET_VECTOR       code   0x000000    program   0x000008
+               INT_VECTOR       code   0x000004    program   0x000018
+                   .cinit    romdata   0x001800    program   0x000004
+                MAIN_PROG       code   0x001802    program   0x00015c
+                    dbgP0       code   0x001f00    program   0x000200
+.config_2007_BUILD/DEFAULT/DEBUG/MAIN.O       code   0x002007    program   0x000002
+                   G_DATA      udata   0x000020       data   0x000002
+                 TEMP_VAR      udata   0x000022       data   0x000001
+                    dbgD0      udata   0x000070       data   0x000001
+                  INT_VAR      udata   0x000071       data   0x000003
+                    dbgD1      udata   0x0000f0       data   0x000001
+                    dbgD2      udata   0x000170       data   0x000001
+                    dbgD3      udata   0x0001e5       data   0x00000b
+                    dbgD4      udata   0x0001f0       data   0x000001
+
+
+
+                              Program Memory Usage 
+                               Start         End      
+                           ---------   ---------      
+                            0x000000    0x00000f      
+                            0x001800    0x0018af      
+                            0x001f00    0x001fff      
+                            0x002007    0x002007      
+            449 out of 8454 program addresses used, program memory utilization is 5%
+
+
+
+                              Symbols - Sorted by Name
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                INTERRUPT   0x000004    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_0021   0x001823    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_004C   0x00184e    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_0050   0x001852    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_0054   0x001856    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_0059   0x00185b    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_005A   0x00185c    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_006B   0x00186d    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_0071   0x001873    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_007B   0x00187d    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_0082   0x001884    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_0086   0x001888    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_008A   0x00188c    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                 delay_ms   0x0018a5    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+              device_init   0x001891    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                     loop   0x00180d    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                  ms_init   0x001824    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                  ms_read   0x00188e    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                  ms_wone   0x001890    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                 ms_write   0x001829    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                 ms_wzero   0x00188f    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                    start   0x001802    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                   w_done   0x00186a    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                  w_inner   0x0018a6    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                    w_tmp   0x001853    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                   w_tmr0   0x0018a9    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                  wp_done   0x00187a    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                    count   0x000020       data     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                     flag   0x000020       data     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+              pclath_temp   0x000073       data     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+              status_temp   0x000072       data     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+               temp_count   0x000022       data     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                   w_temp   0x000071       data     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+
+
+
+                              Symbols - Sorted by Address
+                     Name    Address   Location    Storage File                     
+                ---------  ---------  ---------  --------- ---------                
+                INTERRUPT   0x000004    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                    start   0x001802    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                     loop   0x00180d    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_0021   0x001823    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                  ms_init   0x001824    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                 ms_write   0x001829    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_004C   0x00184e    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_0050   0x001852    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                    w_tmp   0x001853    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_0054   0x001856    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_0059   0x00185b    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_005A   0x00185c    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                   w_done   0x00186a    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_006B   0x00186d    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_0071   0x001873    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                  wp_done   0x00187a    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_007B   0x00187d    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_0082   0x001884    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_0086   0x001888    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+          _MAIN_PROG_008A   0x00188c    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                  ms_read   0x00188e    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                 ms_wzero   0x00188f    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                  ms_wone   0x001890    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+              device_init   0x001891    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                 delay_ms   0x0018a5    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                  w_inner   0x0018a6    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                   w_tmr0   0x0018a9    program     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                    count   0x000020       data     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                     flag   0x000020       data     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+               temp_count   0x000022       data     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+                   w_temp   0x000071       data     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+              status_temp   0x000072       data     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+              pclath_temp   0x000073       data     static /home/dinusha/MPLABXProjects/PS2MouseAsm.X/main.asm
+
+
