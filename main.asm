@@ -103,6 +103,22 @@ PS2_WAIT_CLK_LO MACRO
 	    goto    $-1
 	    ENDM
 	    
+PS2_WAIT_DAT_HI MACRO
+	    ;banksel PS2_CLK_TRIS
+            ;bsf     PS2_CLK_TRIS, PS2_CLK_PIN
+	    banksel PS2_DAT_PORT
+	    btfsc   PS2_DAT_PORT, PS2_DAT_PIN
+	    goto    $-1
+	    ENDM
+	    
+PS2_WAIT_DAT_LO MACRO
+	    ;banksel PS2_CLK_TRIS
+            ;bsf     PS2_CLK_TRIS, PS2_CLK_PIN
+	    banksel PS2_DAT_PORT
+	    btfss   PS2_DAT_PORT, PS2_DAT_PIN
+	    goto    $-1
+	    ENDM
+	    
 PS2_ENABLE_COMM MACRO
  	    banksel PS2_CLK_TRIS
 	    bsf     PS2_CLK_TRIS, PS2_CLK_PIN
@@ -217,55 +233,6 @@ loop
     ;pagesel delay_ms
     ;call    delay_ms 
     
-;    PS2_CLK_LO
-;    
-;    movlw   .150
-;    pagesel delay_ms
-;    call    delay_ms 
-;    
-;    PS2_DAT_LO
-;    
-;    ;movlw   .10
-;    ;pagesel delay_ms
-;    ;call    delay_ms 
-;    
-;    PS2_CLK_HI
-;    
-;    ;banksel PS2_CLK_PORT
-;    ;btfsc   PS2_CLK_PORT, PS2_CLK_PIN
-;    ;goto    $-1
-;    
-;    PS2_WAIT_CLK_LO
-;    ;PS2_DAT_LO
-;    PS2_WAIT_CLK_HI
-;    
-; w_tmp
-;    PS2_WAIT_CLK_LO
-;    
-;    PS2_DAT_HI
-;    
-;        
-;    PS2_WAIT_CLK_HI
-;    
-;    decfsz counter, f
-;    goto   w_tmp
-;    
-;    PS2_WAIT_CLK_LO    ; Send parity bit
-;    
-;    PS2_DATA_LO
-;    
-;    PS2_WAIT_CLK_HI
-;    
-;    ;Wait for acknowledgemet by device
-;    banksel PS2_DAT_TRIS
-;    bsf     PS2_DAT_TRIS, PS2_DAT_PIN
-;    
-;    banksel PS2_DAT_PORT
-;    btfsc   PS2_DAT_PORT, PS2_DAT_PIN
-;    goto    $-1
-;    
-;    PS2_WAIT_CLK_HI
-;    PS2_WAIT_CLK_LO
     
     ;PS2_CLK_LO
     movlw   0xff
@@ -288,8 +255,8 @@ loop
     ;pagesel delay_ms
     ;call    delay_ms
     
-    pagesel ms_read
-    call    ms_read
+    ;pagesel ms_read
+    ;call    ms_read
     
     
     ;movlw .20
@@ -335,15 +302,18 @@ loop
     
     ;PS2_DAT_HI
     
-    ;movlw PS2_CMD_EN_DAT_RPT
-    ;pagesel ms_write
-    ;call    ms_write
+    movlw PS2_CMD_EN_DAT_RPT
+    pagesel ms_write
+    call    ms_write
     
-    ;pagesel ms_read
-    ;call    ms_read
+    pagesel ms_read
+    call    ms_read
     
-    ;pagesel ms_read
-    ;call    ms_read
+    pagesel ms_read
+    call    ms_read
+    
+    pagesel ms_read
+    call    ms_read
     
     ;PS2_ENABLE_COMM
     
@@ -391,11 +361,6 @@ ms_write
     movlw   .8
     movwf   counter
     
-    ;banksel PS2_DAT_TRIS
-    ;bsf     PS2_DAT_TRIS, PS2_DAT_PIN
-    ;banksel PS2_CLK_TRIS
-    ;bsf     PS2_CLK_TRIS, PS2_CLK_PIN
-    
     PS2_ENABLE_COMM
     
     movlw   .150
@@ -410,21 +375,28 @@ ms_write
     
     PS2_DAT_LO
     
+    movlw   .2
+    pagesel delay_us
+    call    delay_us
+    
     ;movlw   .10
     ;pagesel delay_us
     ;call    delay_us
     
+    banksel PS2_CLK_PORT
+    bsf     PS2_CLK_PORT, PS2_CLK_PIN 
+    
     PS2_CLK_HI
-    
-    ;PS2_WAIT_CLK_LO
-    
-    PS2_WAIT_CLK_HI              ; discard start clock pulse
     
     PS2_WAIT_CLK_LO
     
-w_tmp
+    PS2_WAIT_CLK_HI              ; discard start clock pulse
+    
     ;PS2_WAIT_CLK_LO
-    PS2_WAIT_CLK_HI
+    
+w_tmp
+    PS2_WAIT_CLK_LO
+    ;PS2_WAIT_CLK_HI
     
     rrf   tdata, f
     banksel PS2_DAT_PORT
@@ -451,14 +423,14 @@ w_done
     
     ;PS2_DAT_HI
         
-    ;PS2_WAIT_CLK_HI
-    PS2_WAIT_CLK_LO
+    PS2_WAIT_CLK_HI
+    ;PS2_WAIT_CLK_LO
     
     decfsz counter, f
     goto   w_tmp
     
-    ;PS2_WAIT_CLK_LO    ; Send parity bit
-    PS2_WAIT_CLK_HI    ; Send parity bit
+    PS2_WAIT_CLK_LO    ; Send parity bit
+    ;PS2_WAIT_CLK_HI    ; Send parity bit
     
     rrf  parity, f
     banksel PS2_DAT_PORT
@@ -473,31 +445,30 @@ w_done
     
 wp_done   
     
-    ;PS2_WAIT_CLK_HI
-    PS2_WAIT_CLK_LO
+    PS2_WAIT_CLK_HI
+    ;PS2_WAIT_CLK_LO
     
     
     banksel PS2_DAT_TRIS
     bsf     PS2_DAT_TRIS, PS2_DAT_PIN
     
     ;stop bit
-    ;PS2_WAIT_CLK_LO
-    PS2_WAIT_CLK_HI
+    PS2_WAIT_CLK_LO
+    ;PS2_WAIT_CLK_HI
 
     
-    banksel PS2_DAT_PORT
-    btfsc   PS2_DAT_PORT, PS2_DAT_PIN
-    goto    $-1
+    ;banksel PS2_DAT_PORT
+    ;btfsc   PS2_DAT_PORT, PS2_DAT_PIN
+    ;goto    $-1
     
-    ;PS2_WAIT_CLK_HI
-    PS2_WAIT_CLK_LO
+    PS2_WAIT_CLK_HI
+    ;PS2_WAIT_CLK_LO
     
     ;Wait for acknowledgemet by device
-    
-    ;PS2_WAIT_CLK_HI
-    ;PS2_WAIT_CLK_LO
-    ;PS2_WAIT_CLK_LO
+    PS2_WAIT_DAT_LO
+    PS2_WAIT_CLK_LO
     PS2_WAIT_CLK_HI
+    PS2_WAIT_DAT_HI
     
     PS2_DISABLE_COMM
     
@@ -604,15 +575,15 @@ ms_read
     pagesel delay_us
     call    delay_us
     
-    ;PS2_WAIT_CLK_LO
+    PS2_WAIT_CLK_LO
     
     PS2_WAIT_CLK_HI              ; discard start clock pulse
     
-    PS2_WAIT_CLK_LO
+    ;PS2_WAIT_CLK_LO
     
 r_bits
-    ;PS2_WAIT_CLK_LO
-    PS2_WAIT_CLK_HI
+    PS2_WAIT_CLK_LO
+    ;PS2_WAIT_CLK_HI
     
     banksel PS2_DAT_PORT
     btfss   PS2_DAT_PORT, PS2_DAT_PIN
@@ -624,14 +595,14 @@ r_bits
 r_bit_done
     rrf     tdata, f
     
-    ;PS2_WAIT_CLK_HI
-    PS2_WAIT_CLK_LO
+    PS2_WAIT_CLK_HI
+    ;PS2_WAIT_CLK_LO
     
     decfsz counter, f
     goto   r_bits
     
-    ;PS2_WAIT_CLK_LO
-    PS2_WAIT_CLK_HI
+    PS2_WAIT_CLK_LO
+    ;PS2_WAIT_CLK_HI
     
     banksel PS2_DAT_PORT
     btfss   PS2_DAT_PORT, PS2_DAT_PIN
@@ -640,16 +611,18 @@ r_bit_done
     goto    r_parity_done
     bcf     parity, 0
     
-    ;PS2_WAIT_CLK_HI
-    PS2_WAIT_CLK_LO
+    PS2_WAIT_CLK_HI
+    ;PS2_WAIT_CLK_LO
     
 r_parity_done
-    ;PS2_WAIT_CLK_LO
-    PS2_WAIT_CLK_HI
+    PS2_WAIT_CLK_LO
+    ;PS2_WAIT_CLK_HI
     
     banksel PS2_DAT_PORT
     btfsc   PS2_DAT_PORT, PS2_DAT_PIN
     goto    $-1
+    
+    PS2_WAIT_CLK_HI
     
 ;    banksel PS2_CLK_TRIS
 ;    bcf     PS2_CLK_TRIS, PS2_CLK_PIN
@@ -752,6 +725,7 @@ delay_us
     movwf time_scaler
     
 us_loop
+    nop
     nop
     nop
     nop
