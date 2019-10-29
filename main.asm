@@ -239,21 +239,38 @@ loop
     pagesel ms_write
     call    ms_write
     
+    ;movlw .20
+    ;pagesel delay_us
+    ;call    delay_us
+    
+    ;movlw    0x99
+    ;pagesel  uart_print_hex
+    ;call uart_print_hex
+    
     pagesel ms_read
     call    ms_read
     
-    ;movlw .20
-    ;pagesel delay_ms
-    ;call    delay_ms
+    ;movlw    0x99
+    ;pagesel  uart_print_hex
+    ;call uart_print_hex
+    
+    movlw .20
+    pagesel delay_us
+    call    delay_us
     ;pagesel TXPoll
     ;call    TXPoll
     
     pagesel ms_read
     call    ms_read
     
+    movlw    0x99
+    pagesel  uart_print_hex
+    call uart_print_hex
+   
+    
     ;movlw .20
-    ;pagesel delay_ms
-    ;call    delay_ms
+    ;pagesel delay_us
+    ;call    delay_us
     
     ;pagesel ms_read
     ;call    ms_read
@@ -309,11 +326,25 @@ loop
     pagesel ms_read
     call    ms_read
     
+    movlw .100
+    pagesel delay_us
+    call    delay_us
+    
+read_loop    
+    banksel PORTB
+    bcf     PORTB, RB2
+    
     pagesel ms_read
     call    ms_read
     
     pagesel ms_read
     call    ms_read
+    
+    pagesel ms_read
+    call    ms_read
+    
+    pagesel  uart_print_hex
+    call uart_print_hex
     
     ;PS2_ENABLE_COMM
     
@@ -339,14 +370,14 @@ loop
     pagesel delay_ms
     call    delay_ms 
     
-    goto loop
+    goto read_loop
     
     goto $
     
 ;------------------------------------------------------------------------------    
 
 ms_init
-    movlw   .100
+    movlw   .200
     pagesel delay_ms
     call    delay_ms
     
@@ -363,19 +394,19 @@ ms_write
     
     PS2_ENABLE_COMM
     
-    movlw   .150
+    movlw   .200
     pagesel delay_us
     call    delay_us
     
     PS2_CLK_LO
     
-    movlw   .150
+    movlw   .200
     pagesel delay_us
     call    delay_us 
     
     PS2_DAT_LO
     
-    movlw   .2
+    movlw   .5
     pagesel delay_us
     call    delay_us
     
@@ -388,7 +419,7 @@ ms_write
     
     PS2_CLK_HI
     
-    PS2_WAIT_CLK_LO
+    ;PS2_WAIT_CLK_LO
     
     PS2_WAIT_CLK_HI              ; discard start clock pulse
     
@@ -531,14 +562,15 @@ uart_print_hex
 	
 	swapf   temp, 0
 	andlw   0x0f
-	addlw   ' '
+	addlw   '0'
+	
 	
 	pagesel hex2ascii
 	call    hex2ascii
 	
 	movlw  0x0f
 	andwf  temp, 0
-	addlw  ' '
+	addlw  '0'
 	
 	pagesel hex2ascii
 	call    hex2ascii
@@ -571,15 +603,18 @@ ms_read
     
     PS2_ENABLE_COMM
     
-    movlw   .50
+    movlw   .100
     pagesel delay_us
     call    delay_us
     
-    PS2_WAIT_CLK_LO
+    ;PS2_WAIT_CLK_LO
     
     PS2_WAIT_CLK_HI              ; discard start clock pulse
     
     ;PS2_WAIT_CLK_LO
+    ;movlw   .5
+    ;pagesel delay_us
+    ;call    delay_us
     
 r_bits
     PS2_WAIT_CLK_LO
