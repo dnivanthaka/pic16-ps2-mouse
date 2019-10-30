@@ -123,16 +123,16 @@ PS2_ENABLE_COMM MACRO
  	    banksel PS2_CLK_TRIS
 	    bsf     PS2_CLK_TRIS, PS2_CLK_PIN
 	    
-	    banksel PS2_DAT_TRIS
-	    bsf     PS2_DAT_TRIS, PS2_DAT_PIN
+	    ;banksel PS2_DAT_TRIS
+	    ;bsf     PS2_DAT_TRIS, PS2_DAT_PIN
 	    ENDM
 	    
 PS2_DISABLE_COMM MACRO
+ 	    banksel PS2_CLK_PORT
+	    bcf     PS2_CLK_PORT, PS2_CLK_PIN
+	    
 	    banksel PS2_CLK_TRIS
 	    bcf     PS2_CLK_TRIS, PS2_CLK_PIN
-
-	    banksel PS2_CLK_PORT
-	    bcf     PS2_CLK_PORT, PS2_CLK_PIN
 	    ENDM
 	    
 		
@@ -254,18 +254,25 @@ loop
     ;pagesel  uart_print_hex
     ;call uart_print_hex
     
-    movlw .20
-    pagesel delay_us
-    call    delay_us
+    ;PS2_DISABLE_COMM
+    
+    ;movlw .200
+    ;pagesel delay_us
+    ;call    delay_us
     ;pagesel TXPoll
     ;call    TXPoll
     
-    pagesel ms_read
-    call    ms_read
+    ;PS2_ENABLE_COMM
     
-    movlw    0x99
-    pagesel  uart_print_hex
-    call uart_print_hex
+    ;pagesel ms_read
+    ;call    ms_read
+    
+    ;pagesel ms_read
+    ;call    ms_read
+    
+    ;movlw    0x99
+    ;pagesel  uart_print_hex
+    ;call uart_print_hex
    
     
     ;movlw .20
@@ -319,9 +326,25 @@ loop
     
     ;PS2_DAT_HI
     
+    ;PS2_DISABLE_COMM
+    
+    ;movlw .100
+    ;pagesel delay_ms
+    ;call    delay_ms
+    
+    ;PS2_ENABLE_COMM
+    
+    ;movlw .200
+    ;pagesel delay_us
+    ;call    delay_us
+    
     movlw PS2_CMD_EN_DAT_RPT
     pagesel ms_write
     call    ms_write
+    
+    ;movlw    0x99
+    ;pagesel  uart_print_hex
+    ;call uart_print_hex
     
     pagesel ms_read
     call    ms_read
@@ -330,18 +353,26 @@ loop
     pagesel delay_us
     call    delay_us
     
+    movlw    0x99
+    pagesel  uart_print_hex
+    call uart_print_hex
+    
+    
 read_loop    
     banksel PORTB
     bcf     PORTB, RB2
     
-    pagesel ms_read
-    call    ms_read
+    ;pagesel ms_read
+    ;call    ms_read
     
-    pagesel ms_read
-    call    ms_read
+    ;pagesel ms_read
+    ;call    ms_read
     
-    pagesel ms_read
-    call    ms_read
+    ;pagesel ms_read
+    ;call    ms_read
+    
+    pagesel ms_read_frame
+    call    ms_read_frame
     
     pagesel  uart_print_hex
     call uart_print_hex
@@ -392,7 +423,24 @@ ms_write
     movlw   .8
     movwf   counter
     
-    PS2_ENABLE_COMM
+    ;PS2_ENABLE_COMM
+    ;banksel PS2_CLK_TRIS
+    ;bsf     PS2_CLK_TRIS, PS2_CLK_PIN
+
+    ;banksel PS2_DAT_TRIS
+    ;bsf     PS2_DAT_TRIS, PS2_DAT_PIN
+    
+    banksel PS2_CLK_PORT
+    bsf     PS2_CLK_PORT, PS2_CLK_PIN
+
+    banksel PS2_DAT_PORT
+    bsf     PS2_DAT_PORT, PS2_DAT_PIN
+    
+    banksel PS2_CLK_TRIS
+    bcf     PS2_CLK_TRIS, PS2_CLK_PIN
+
+    banksel PS2_DAT_TRIS
+    bcf     PS2_DAT_TRIS, PS2_DAT_PIN
     
     movlw   .200
     pagesel delay_us
@@ -501,7 +549,7 @@ wp_done
     PS2_WAIT_CLK_HI
     PS2_WAIT_DAT_HI
     
-    PS2_DISABLE_COMM
+    ;PS2_DISABLE_COMM
     
     ;movlw   .60
     ;pagesel delay_ms
@@ -596,16 +644,16 @@ ms_read
     movlw   .8
     movwf   counter
     
-;    banksel PS2_DAT_TRIS
-;    bsf     PS2_DAT_TRIS, PS2_DAT_PIN
-;    banksel PS2_CLK_TRIS
-;    bsf     PS2_CLK_TRIS, PS2_CLK_PIN
+    ;banksel PS2_DAT_TRIS
+    ;bsf     PS2_DAT_TRIS, PS2_DAT_PIN
+    ;banksel PS2_CLK_TRIS
+    ;bsf     PS2_CLK_TRIS, PS2_CLK_PIN
     
-    PS2_ENABLE_COMM
+    ;PS2_ENABLE_COMM
     
-    movlw   .100
-    pagesel delay_us
-    call    delay_us
+    ;movlw   .100
+    ;pagesel delay_us
+    ;call    delay_us
     
     ;PS2_WAIT_CLK_LO
     
@@ -669,9 +717,25 @@ r_parity_done
     ;pagesel delay_ms
     ;call    delay_ms
     
-    PS2_DISABLE_COMM
+    ;PS2_DISABLE_COMM
     
     movf    tdata, 0
+    
+    return
+    
+ms_read_frame
+    PS2_ENABLE_COMM
+    
+    pagesel ms_read
+    call    ms_read
+    
+    pagesel ms_read
+    call    ms_read
+    
+    pagesel ms_read
+    call    ms_read
+    
+    PS2_DISABLE_COMM
     
     return
     
