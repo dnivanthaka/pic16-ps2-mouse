@@ -3,19 +3,11 @@
 ;1Mhz = 1us (One instruction)
 ;5Mhz = 0.2us
 ;**********************************************************************
-;   This file is a basic code template for object module code         *
-;   generation on the PIC16F876A. This file contains the              *
-;   basic code building blocks to build upon.                         *
-;                                                                     *
-;   Refer to the MPASM User's Guide for additional information on     *
-;   features of the assembler and linker (Document DS33014).          *
-;                                                                     *
-;   Refer to the respective PIC data sheet for additional             *
-;   information on the instruction set.                               *
+;   PS/2 Mouse interface                                              *
 ;                                                                     *
 ;**********************************************************************
 ;                                                                     *
-;    Filename:      xxx.asm                                           *
+;    Filename:      main.asm                                           *
 ;    Date:                                                            *
 ;    File Version:                                                    *
 ;                                                                     *
@@ -148,24 +140,17 @@ endc
 
 ; example of using Shared Uninitialized Data Section
 INT_VAR     UDATA_SHR      
-w_temp      RES     1       ; variable used for context saving 
-status_temp RES     1       ; variable used for context saving
-pclath_temp RES     1       ; variable used for context saving
-
 
 
 ; example of using Uninitialized Data Section
 TEMP_VAR    UDATA           ; explicit address specified is not required
-temp_count  RES     1       ; temporary variable (example)
+
 
 
 ; example of using Overlayed Uninitialized Data Section
 ; in this example both variables are assigned the same GPR location by linker
 G_DATA      UDATA_OVR       ; explicit address can be specified
-flag        RES     2       ; temporary variable (shared locations - G_DATA)
 
-G_DATA      UDATA_OVR   
-count       RES     2       ; temporary variable (shared locations - G_DATA)
 
 ;**********************************************************************
 RESET_VECTOR    CODE    0x0000  ; processor reset vector
@@ -177,30 +162,11 @@ INT_VECTOR      CODE    0x0004  ; interrupt vector location
 
 INTERRUPT
 
-    movwf   w_temp          ; save off current W register contents
-    movf    STATUS,w        ; move status register into W register
-    movwf   status_temp     ; save off contents of STATUS register
-    movf    PCLATH,w        ; move pclath register into w register
-    movwf   pclath_temp     ; save off contents of PCLATH register
-
-; isr code can go here or be located as a call subroutine elsewhere
-
-    movf    pclath_temp,w       ; retrieve copy of PCLATH register
-    movwf   PCLATH          ; restore pre-isr PCLATH register contents
-    movf    status_temp,w       ; retrieve copy of STATUS register
-    movwf   STATUS          ; restore pre-isr STATUS register contents
-    swapf   w_temp,f
-    swapf   w_temp,w        ; restore pre-isr W register contents
     retfie              ; return from interrupt
 
 MAIN_PROG       CODE
 
 start
-
-    nop             ; code starts here (example)
-    banksel count           ; example
-    clrf    count           ; example
-
     pagesel device_init
     call    device_init
     
@@ -264,11 +230,11 @@ loop
     
     ;PS2_ENABLE_COMM
     
-    ;pagesel ms_read
-    ;call    ms_read
+    pagesel ms_read
+    call    ms_read
     
-    ;pagesel ms_read
-    ;call    ms_read
+    pagesel ms_read
+    call    ms_read
     
     ;movlw    0x99
     ;pagesel  uart_print_hex
@@ -334,9 +300,9 @@ loop
     
     ;PS2_ENABLE_COMM
     
-    ;movlw .200
-    ;pagesel delay_us
-    ;call    delay_us
+    movlw .200
+    pagesel delay_us
+    call    delay_us
     
     movlw PS2_CMD_EN_DAT_RPT
     pagesel ms_write
@@ -353,9 +319,9 @@ loop
     pagesel delay_us
     call    delay_us
     
-    movlw    0x99
-    pagesel  uart_print_hex
-    call uart_print_hex
+    ;movlw    0x99
+    ;pagesel  uart_print_hex
+    ;call uart_print_hex
     
     
 read_loop    
@@ -374,8 +340,8 @@ read_loop
     pagesel ms_read_frame
     call    ms_read_frame
     
-    pagesel  uart_print_hex
-    call uart_print_hex
+    ;pagesel  uart_print_hex
+    ;call uart_print_hex
     
     ;PS2_ENABLE_COMM
     
@@ -397,7 +363,7 @@ read_loop
     banksel PORTB
     bsf     PORTB, RB2
     
-    movlw   .250
+    movlw   .100
     pagesel delay_ms
     call    delay_ms 
     
@@ -424,23 +390,23 @@ ms_write
     movwf   counter
     
     ;PS2_ENABLE_COMM
-    ;banksel PS2_CLK_TRIS
-    ;bsf     PS2_CLK_TRIS, PS2_CLK_PIN
-
-    ;banksel PS2_DAT_TRIS
-    ;bsf     PS2_DAT_TRIS, PS2_DAT_PIN
-    
-    banksel PS2_CLK_PORT
-    bsf     PS2_CLK_PORT, PS2_CLK_PIN
-
-    banksel PS2_DAT_PORT
-    bsf     PS2_DAT_PORT, PS2_DAT_PIN
-    
     banksel PS2_CLK_TRIS
-    bcf     PS2_CLK_TRIS, PS2_CLK_PIN
+    bsf     PS2_CLK_TRIS, PS2_CLK_PIN
 
     banksel PS2_DAT_TRIS
-    bcf     PS2_DAT_TRIS, PS2_DAT_PIN
+    bsf     PS2_DAT_TRIS, PS2_DAT_PIN
+    
+;    banksel PS2_CLK_PORT
+;    bsf     PS2_CLK_PORT, PS2_CLK_PIN
+;
+;    banksel PS2_DAT_PORT
+;    bsf     PS2_DAT_PORT, PS2_DAT_PIN
+;    
+;    banksel PS2_CLK_TRIS
+;    bcf     PS2_CLK_TRIS, PS2_CLK_PIN
+;
+;    banksel PS2_DAT_TRIS
+;    bcf     PS2_DAT_TRIS, PS2_DAT_PIN
     
     movlw   .200
     pagesel delay_us
@@ -474,7 +440,7 @@ ms_write
     ;PS2_WAIT_CLK_LO
     
 w_tmp
-    PS2_WAIT_CLK_LO
+    ;PS2_WAIT_CLK_LO
     ;PS2_WAIT_CLK_HI
     
     rrf   tdata, f
@@ -488,8 +454,8 @@ w_tmp
     ;PS2_DAT_LO
     ;banksel PS2_DAT_PORT
     bcf   PS2_DAT_PORT, PS2_DAT_PIN
-    movlw 0x0
-    xorwf parity, f
+    ;movlw 0x0
+    ;xorwf parity, f
     goto    w_done
     ;PS2_DAT_HI
     ;banksel PS2_DAT_PORT
@@ -501,14 +467,19 @@ w_done
     ;PS2_WAIT_CLK_LO
     
     ;PS2_DAT_HI
-        
+    
+    PS2_WAIT_CLK_LO
     PS2_WAIT_CLK_HI
     ;PS2_WAIT_CLK_LO
     
+    nop
+    nop
+    nop
+
     decfsz counter, f
     goto   w_tmp
     
-    PS2_WAIT_CLK_LO    ; Send parity bit
+    ;PS2_WAIT_CLK_LO    ; Send parity bit
     ;PS2_WAIT_CLK_HI    ; Send parity bit
     
     rrf  parity, f
@@ -524,6 +495,7 @@ w_done
     
 wp_done   
     
+    PS2_WAIT_CLK_LO
     PS2_WAIT_CLK_HI
     ;PS2_WAIT_CLK_LO
     
@@ -532,7 +504,7 @@ wp_done
     bsf     PS2_DAT_TRIS, PS2_DAT_PIN
     
     ;stop bit
-    PS2_WAIT_CLK_LO
+    ;PS2_WAIT_CLK_LO
     ;PS2_WAIT_CLK_HI
 
     
@@ -540,6 +512,7 @@ wp_done
     ;btfsc   PS2_DAT_PORT, PS2_DAT_PIN
     ;goto    $-1
     
+    PS2_WAIT_CLK_LO
     PS2_WAIT_CLK_HI
     ;PS2_WAIT_CLK_LO
     
@@ -628,12 +601,12 @@ uart_print_hex
 hex2dec
 	;movwf	temp
 	btfss	temp, 3
-	return	0x30
+	retlw	0x30
 	movlw	0x06
 	andwf	temp, w
 	btfsc	STATUS, Z
-	return	0x30
-	return	0x41	
+	retlw	0x30
+	retlw	0x41	
 
 	return
 ;-----------------------------    
@@ -659,14 +632,18 @@ ms_read
     
     PS2_WAIT_CLK_HI              ; discard start clock pulse
     
-    ;PS2_WAIT_CLK_LO
+    PS2_WAIT_CLK_LO
     ;movlw   .5
     ;pagesel delay_us
     ;call    delay_us
     
 r_bits
-    PS2_WAIT_CLK_LO
-    ;PS2_WAIT_CLK_HI
+    ;PS2_WAIT_CLK_LO
+    PS2_WAIT_CLK_HI
+    
+    movlw   .2
+    pagesel delay_us
+    call    delay_us
     
     banksel PS2_DAT_PORT
     btfss   PS2_DAT_PORT, PS2_DAT_PIN
@@ -678,14 +655,18 @@ r_bits
 r_bit_done
     rrf     tdata, f
     
-    PS2_WAIT_CLK_HI
-    ;PS2_WAIT_CLK_LO
+    ;PS2_WAIT_CLK_HI
+    PS2_WAIT_CLK_LO
     
     decfsz counter, f
     goto   r_bits
     
-    PS2_WAIT_CLK_LO
-    ;PS2_WAIT_CLK_HI
+    ;PS2_WAIT_CLK_LO
+    PS2_WAIT_CLK_HI
+    
+    movlw   .2
+    pagesel delay_us
+    call    delay_us
     
     banksel PS2_DAT_PORT
     btfss   PS2_DAT_PORT, PS2_DAT_PIN
@@ -694,18 +675,20 @@ r_bit_done
     goto    r_parity_done
     bcf     parity, 0
     
-    PS2_WAIT_CLK_HI
-    ;PS2_WAIT_CLK_LO
+    ;PS2_WAIT_CLK_HI
+    PS2_WAIT_CLK_LO
     
 r_parity_done
-    PS2_WAIT_CLK_LO
-    ;PS2_WAIT_CLK_HI
-    
-    banksel PS2_DAT_PORT
-    btfsc   PS2_DAT_PORT, PS2_DAT_PIN
-    goto    $-1
-    
+    ; stop bit
+    ;PS2_WAIT_CLK_LO
     PS2_WAIT_CLK_HI
+    
+    ;banksel PS2_DAT_PORT
+    ;btfsc   PS2_DAT_PORT, PS2_DAT_PIN
+    ;goto    $-1
+    
+    ;PS2_WAIT_CLK_HI
+    PS2_WAIT_CLK_LO
     
 ;    banksel PS2_CLK_TRIS
 ;    bcf     PS2_CLK_TRIS, PS2_CLK_PIN
@@ -719,7 +702,7 @@ r_parity_done
     
     ;PS2_DISABLE_COMM
     
-    movf    tdata, 0
+    movf    tdata, w
     
     return
     
