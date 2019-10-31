@@ -46,8 +46,24 @@
 #define		PS2_DAT_PORT		PORTB			; Data line port, config, and pin
 #define		PS2_DAT_TRIS		TRISB
 #define		PS2_DAT_PIN		0
+#define         PS2_CMD_RESET           0xFF
+#define         PS2_CMD_RESEND          0xFE
+#define         PS2_CMD_DEFAULT         0xF6		
 #define		PS2_CMD_EN_DAT_RPT	0xF4		; Enable Data Reporting
+#define		PS2_CMD_DIS_DAT_RPT	0xF5		; Disable Data Reporting
+#define		PS2_CMD_SET_RATE	0xF3		
+#define		PS2_CMD_GET_ID	        0xF2
+#define		PS2_CMD_SET_DAT_REMOTE	0xF0
+#define		PS2_CMD_SET_WRAP_MODE	0xEE
+#define		PS2_CMD_RESET_WRAP_MODE	0xEC
+#define		PS2_CMD_READ_DATA	0xEB
+#define		PS2_CMD_SET_STREAM_MODE	0xEA
+#define		PS2_CMD_STATUS_REQ	0xE9
+#define		PS2_CMD_SET_RESOLUTION	0xE8
+#define		PS2_CMD_SET_SCALE_2_1	0xE7
+#define		PS2_CMD_SET_SCALE_1_1	0xE6
 
+		
 PS2_CLK_HI MACRO    
             banksel PS2_CLK_TRIS
             bsf     PS2_CLK_TRIS, PS2_CLK_PIN
@@ -136,6 +152,9 @@ parity
 tdata
 counter
 temp
+ms_btn
+ms_x
+ms_y	    
 endc
 
 ; example of using Shared Uninitialized Data Section
