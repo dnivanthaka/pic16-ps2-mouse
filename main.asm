@@ -182,23 +182,6 @@ loop
     pagesel  ms_init
     call     ms_init
     
-    ;movlw   .8
-    ;movwf   counter
-    
-    ;movlw   .1
-    ;movwf   parity
-    
-    ;movlw   .200
-    ;pagesel delay_ms
-    ;call    delay_ms
-    
-    ;banksel PORTB
-    ;bsf     PORTB, RB2
-       
-    ;movlw   .250
-    ;pagesel delay_ms
-    ;call    delay_ms 
-    
     
     ;PS2_CLK_LO
     movlw   0xff
@@ -236,67 +219,6 @@ loop
     pagesel ms_read
     call    ms_read
     
-    ;movlw    0x99
-    ;pagesel  uart_print_hex
-    ;call uart_print_hex
-   
-    
-    ;movlw .20
-    ;pagesel delay_us
-    ;call    delay_us
-    
-    ;pagesel ms_read
-    ;call    ms_read
-    
-    
-    ;movlw .20
-    ;pagesel delay_ms
-    ;call    delay_ms
-    
-    ;pagesel ms_read
-    ;call    ms_read
-    
-    
-    ;movlw .20
-    ;pagesel delay_ms
-    ;call    delay_ms
-    
-    ;pagesel ms_read
-    ;call    ms_read
-    
-    ;movwf   tdata
-    
-    ;movlw   0x0c
-    ;andlw   0x0f
-    ;addlw   ' '
-    
-    ;pagesel hex2dec
-    ;call    hex2dec
-    
-    ;pagesel TXPoll
-    ;call    TXPoll
-    
-    ;pagesel hex2ascii
-    ;call    hex2ascii
-    
-    ;pagesel  uart_print_hex
-    ;call uart_print_hex
-    
-    ;movlw   0xff
-    ;xorwf   tdata, 0
-    ;btfss   STATUS, Z
-    ;goto    loop
-    
-    ;nop
-    ;nop
-    
-    ;PS2_DAT_HI
-    
-    ;PS2_DISABLE_COMM
-    
-    ;movlw .100
-    ;pagesel delay_ms
-    ;call    delay_ms
     
     ;PS2_ENABLE_COMM
     
@@ -395,18 +317,6 @@ ms_write
 
     banksel PS2_DAT_TRIS
     bsf     PS2_DAT_TRIS, PS2_DAT_PIN
-    
-;    banksel PS2_CLK_PORT
-;    bsf     PS2_CLK_PORT, PS2_CLK_PIN
-;
-;    banksel PS2_DAT_PORT
-;    bsf     PS2_DAT_PORT, PS2_DAT_PIN
-;    
-;    banksel PS2_CLK_TRIS
-;    bcf     PS2_CLK_TRIS, PS2_CLK_PIN
-;
-;    banksel PS2_DAT_TRIS
-;    bcf     PS2_DAT_TRIS, PS2_DAT_PIN
     
     movlw   .200
     pagesel delay_us
@@ -617,18 +527,6 @@ ms_read
     movlw   .8
     movwf   counter
     
-    ;banksel PS2_DAT_TRIS
-    ;bsf     PS2_DAT_TRIS, PS2_DAT_PIN
-    ;banksel PS2_CLK_TRIS
-    ;bsf     PS2_CLK_TRIS, PS2_CLK_PIN
-    
-    ;PS2_ENABLE_COMM
-    
-    ;movlw   .100
-    ;pagesel delay_us
-    ;call    delay_us
-    
-    ;PS2_WAIT_CLK_LO
     
     PS2_WAIT_CLK_HI              ; discard start clock pulse
     
