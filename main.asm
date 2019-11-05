@@ -379,7 +379,7 @@ w_tmp
     ;xorwf   parity, f
     btfss   STATUS, C
     goto    $+2
-    goto    $+5
+    goto    $+3
     ;PS2_DAT_LO
     ;banksel PS2_DAT_PORT
     bcf   PS2_DAT_PORT, PS2_DAT_PIN
