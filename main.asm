@@ -152,6 +152,8 @@ parity
 tdata
 counter
 temp
+temp_2
+temp_3
 ms_btn
 ms_x
 ms_y	    
@@ -189,69 +191,28 @@ start
     pagesel device_init
     call    device_init
     
-    movlw   .100
-    pagesel delay_ms
-    call    delay_ms
+    ;movlw   .100
+    ;pagesel delay_ms
+    ;call    delay_ms
     ;call    delay_ms                   ; wait for device to settle
-
-loop
+    
     banksel PORTB
     bcf     PORTB, RB2
     
     pagesel  ms_init
     call     ms_init
     
+    ;movlw PS2_CMD_DIS_DAT_RPT
+    ;pagesel ms_write
+    ;call    ms_write
     
-    ;PS2_CLK_LO
-    movlw   0xff
+    ;pagesel ms_read
+    ;call    ms_read
+    
+    ;movlw PS2_CMD_EN_DAT_RPT
+    movlw 0xF0
     pagesel ms_write
     call    ms_write
-    
-    ;movlw .20
-    ;pagesel delay_us
-    ;call    delay_us
-    
-    ;movlw    0x99
-    ;pagesel  uart_print_hex
-    ;call uart_print_hex
-    
-    pagesel ms_read
-    call    ms_read
-    
-    ;movlw    0x99
-    ;pagesel  uart_print_hex
-    ;call uart_print_hex
-    
-    ;PS2_DISABLE_COMM
-    
-    ;movlw .200
-    ;pagesel delay_us
-    ;call    delay_us
-    ;pagesel TXPoll
-    ;call    TXPoll
-    
-    ;PS2_ENABLE_COMM
-    
-    pagesel ms_read
-    call    ms_read
-    
-    pagesel ms_read
-    call    ms_read
-    
-    
-    ;PS2_ENABLE_COMM
-    
-    movlw .200
-    pagesel delay_us
-    call    delay_us
-    
-    movlw PS2_CMD_EN_DAT_RPT
-    pagesel ms_write
-    call    ms_write
-    
-    ;movlw    0x99
-    ;pagesel  uart_print_hex
-    ;call uart_print_hex
     
     pagesel ms_read
     call    ms_read
@@ -260,20 +221,44 @@ loop
     pagesel delay_us
     call    delay_us
     
-    ;movlw    0x99
-    ;pagesel  uart_print_hex
-    ;call uart_print_hex
+    movlw 0xEB
+    pagesel ms_write
+    call    ms_write
+    
+    pagesel ms_read
+    call    ms_read
+    
+    pagesel uart_print_hex
+    call    uart_print_hex
+    
+    pagesel ms_read
+    call    ms_read
+    
+    
+    pagesel ms_read
+    call    ms_read
+    
+    pagesel ms_read
+    call    ms_read
+    
+    ;movf    ms_btn, w
+    pagesel uart_print_hex
+    call    uart_print_hex
+    
+    PS2_DISABLE_COMM
+    
+    movlw .100
+    pagesel delay_us
+    call    delay_us
     
     
 read_loop    
     banksel PORTB
     bcf     PORTB, RB2
     
-    ;pagesel ms_read
-    ;call    ms_read
-    
-    ;pagesel ms_read
-    ;call    ms_read
+    ;movlw 0xEB
+    ;pagesel ms_write
+    ;call    ms_write
     
     ;pagesel ms_read
     ;call    ms_read
@@ -281,43 +266,88 @@ read_loop
     pagesel ms_read_frame
     call    ms_read_frame
     
-    ;pagesel  uart_print_hex
-    ;call uart_print_hex
-    
-    ;PS2_ENABLE_COMM
-    
-    ;PS2_WAIT_CLK_HI 
-    
-    ;pagesel ms_read
-    ;call    ms_read
-    
-    ;pagesel ms_read
-    ;call    ms_read
-    
-    ;pagesel ms_read
-    ;call    ms_read
-    
-    ;movlw    0xff
-    ;pagesel  ms_write
-    ;call     ms_write
-    
     banksel PORTB
     bsf     PORTB, RB2
     
-    movlw   .100
-    pagesel delay_ms
-    call    delay_ms 
+    movf    ms_btn, w
+    pagesel uart_print_hex
+    call    uart_print_hex
+    
+    movlw   0x0D
+    pagesel TXPoll
+    call    TXPoll
+    
+    movlw   0x0A
+    pagesel TXPoll
+    call    TXPoll
+    
     
     goto read_loop
     
     goto $
     
-;------------------------------------------------------------------------------    
-
+;------------------------------------------------------------------------------   
 ms_init
     movlw   .200
     pagesel delay_ms
     call    delay_ms
+    
+    movlw   0xff
+    pagesel ms_write
+    call    ms_write
+    
+    pagesel ms_read
+    call    ms_read
+    
+    pagesel ms_read
+    call    ms_read
+    
+    pagesel ms_read
+    call    ms_read
+    
+    pagesel uart_print_hex
+    call    uart_print_hex
+    
+    movlw   PS2_CMD_SET_RATE
+    pagesel ms_write
+    call    ms_write
+    
+    pagesel ms_read
+    call    ms_read
+    
+    movlw   0x64                        ;100
+    pagesel ms_write
+    call    ms_write
+    
+    pagesel ms_read
+    call    ms_read
+    
+    movlw   PS2_CMD_SET_RESOLUTION                       
+    pagesel ms_write
+    call    ms_write
+    
+    pagesel ms_read
+    call    ms_read
+    
+    movlw   0x02
+    pagesel ms_write
+    call    ms_write
+    
+    pagesel ms_read
+    call    ms_read
+    
+    movlw   0xF2
+    pagesel ms_write
+    call    ms_write
+    
+    pagesel ms_read
+    call    ms_read
+    
+    pagesel ms_read
+    call    ms_read
+    
+    pagesel uart_print_hex
+    call    uart_print_hex
     
     return
     
@@ -508,20 +538,43 @@ ztn
 	return
 	
 uart_print_hex
-	movwf temp
+	movwf temp_2
 	
-	swapf   temp, 0
-	andlw   0x0f
-	addlw   '0'
+	;swapf   temp, 0
+	;movf    temp, w
+	;andlw   0x0f
+	;addlw   '0'
+	;movwf   temp_2
+	;sublw   '9'
+	;movlw   .0
+	;btfsc   STATUS, C
+	;movlw   'A' - '9'
+	;addwf   temp_2, f
+	swapf   temp_2, w
+	andlw 0x0f
+	;andwf temp_2, w
 	
-	
+	;movf    temp_2, w
 	pagesel hex2ascii
 	call    hex2ascii
+	;pagesel TXPoll
+	;call    TXPoll
 	
-	movlw  0x0f
-	andwf  temp, 0
-	addlw  '0'
-	
+	;movlw  0x0f
+	;andwf  temp, 0
+	;addlw  '0'
+;	movwf   temp_2
+;	sublw   '9'
+;	movlw   .0
+;	btfsc   STATUS, C
+;	movlw   'A' - '9'
+;	addwf   temp_2, f
+	;swapf   temp_2, f
+	movf  temp_2, w
+	andlw 0x0f
+	;andwf temp_2, w
+	;movf    temp_2, w
+	;andlw   0x0f
 	pagesel hex2ascii
 	call    hex2ascii
 	
@@ -543,22 +596,28 @@ ms_read
     clrf    tdata
     clrf    parity
     
+    ;banksel PS2_DAT_TRIS
+    ;bsf     PS2_DAT_TRIS, PS2_DAT_PIN
+    
+    bcf     STATUS, C
+    
     movlw   .8
     movwf   counter
     
     
     PS2_WAIT_CLK_HI              ; discard start clock pulse
-    
+
     PS2_WAIT_CLK_LO
     ;movlw   .5
     ;pagesel delay_us
     ;call    delay_us
+    ;PS2_WAIT_CLK_HI
     
 r_bits
     ;PS2_WAIT_CLK_LO
     PS2_WAIT_CLK_HI
     
-    movlw   .2
+    movlw   .5
     pagesel delay_us
     call    delay_us
     
@@ -581,7 +640,7 @@ r_bit_done
     ;PS2_WAIT_CLK_LO
     PS2_WAIT_CLK_HI
     
-    movlw   .2
+    movlw   .5
     pagesel delay_us
     call    delay_us
     
@@ -619,6 +678,13 @@ r_parity_done
     
     ;PS2_DISABLE_COMM
     
+    PS2_WAIT_CLK_HI                    ;stop bit
+    PS2_WAIT_CLK_LO
+    
+    ;movlw   .5
+    ;pagesel delay_us
+    ;call    delay_us
+    
     movf    tdata, w
     
     return
@@ -626,16 +692,27 @@ r_parity_done
 ms_read_frame
     PS2_ENABLE_COMM
     
-    pagesel ms_read
-    call    ms_read
+    ;movlw   .50
+    ;pagesel delay_us
+    ;call    delay_us
     
     pagesel ms_read
     call    ms_read
+    movwf   ms_btn
     
     pagesel ms_read
     call    ms_read
+    movwf   ms_x
+    
+    pagesel ms_read
+    call    ms_read
+    movwf   ms_y
     
     PS2_DISABLE_COMM
+    
+    movlw   .100
+    pagesel delay_us
+    call    delay_us
     
     return
     
@@ -676,7 +753,7 @@ device_init
     banksel TXREG
     clrf    TXREG
     
-    movlw   0x81
+    movlw   0x81           ;9600 bps
     banksel SPBRG
     movwf   SPBRG
     
@@ -727,8 +804,8 @@ us_loop
     nop
     nop
     nop
-    nop
-    nop
+    ;nop
+    ;nop
     decfsz  time_scaler, f
     goto us_loop
     
