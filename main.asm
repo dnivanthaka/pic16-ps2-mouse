@@ -217,33 +217,64 @@ start
     pagesel ms_read
     call    ms_read
     
-    movlw .100
-    pagesel delay_us
-    call    delay_us
+;    movlw .200
+;    pagesel delay_us
+;    call    delay_us
     
-    movlw 0xEB
-    pagesel ms_write
-    call    ms_write
+        
+;    movlw   0x0D
+;    pagesel TXPoll
+;    call    TXPoll
+;    
+;    movlw   0x0A
+;    pagesel TXPoll
+;    call    TXPoll
     
-    pagesel ms_read
-    call    ms_read
+;    movlw 0xEB
+;    pagesel ms_write
+;    call    ms_write
+;    
+;    pagesel ms_read
+;    call    ms_read
     
-    pagesel uart_print_hex
-    call    uart_print_hex
+    ;pagesel uart_print_hex
+    ;call    uart_print_hex
     
-    pagesel ms_read
-    call    ms_read
+;    pagesel ms_read
+;    call    ms_read
     
+;    pagesel uart_print_hex
+;    call    uart_print_hex
     
-    pagesel ms_read
-    call    ms_read
+    ;movlw 0xEB
+    ;pagesel ms_write
+    ;call    ms_write
     
-    pagesel ms_read
-    call    ms_read
+;    pagesel ms_read
+;    call    ms_read
+    
+;    pagesel ms_read
+;    call    ms_read
+    
+;    pagesel uart_print_hex
+;    call    uart_print_hex
+;    
+;    pagesel ms_read
+;    call    ms_read
+;;    
+;    pagesel uart_print_hex
+;    call    uart_print_hex
     
     ;movf    ms_btn, w
-    pagesel uart_print_hex
-    call    uart_print_hex
+    ;pagesel uart_print_hex
+    ;call    uart_print_hex
+    
+;    movlw PS2_CMD_EN_DAT_RPT
+;    pagesel ms_write
+;    call    ms_write
+;    
+;    pagesel ms_read
+;    call    ms_read
     
     PS2_DISABLE_COMM
     
@@ -256,15 +287,28 @@ read_loop
     banksel PORTB
     bcf     PORTB, RB2
     
-    ;movlw 0xEB
-    ;pagesel ms_write
-    ;call    ms_write
+    movlw 0xEB
+    pagesel ms_write
+    call    ms_write
     
-    ;pagesel ms_read
-    ;call    ms_read
+    pagesel ms_read
+    call    ms_read
     
-    pagesel ms_read_frame
-    call    ms_read_frame
+    ;pagesel ms_read_frame
+    ;call    ms_read_frame
+    
+    pagesel ms_read
+    call    ms_read
+    movwf   ms_btn
+    
+    pagesel ms_read
+    call    ms_read
+    movwf   ms_x
+    
+    
+    pagesel ms_read
+    call    ms_read
+    movwf   ms_y
     
     banksel PORTB
     bsf     PORTB, RB2
@@ -346,8 +390,12 @@ ms_init
     pagesel ms_read
     call    ms_read
     
-    pagesel uart_print_hex
-    call    uart_print_hex
+    movlw   0xF6
+    pagesel ms_write
+    call    ms_write
+    
+    pagesel ms_read
+    call    ms_read
     
     return
     
@@ -392,44 +440,24 @@ ms_write
     
     PS2_CLK_HI
     
-    ;PS2_WAIT_CLK_LO
-    
     PS2_WAIT_CLK_HI              ; discard start clock pulse
     
-    ;PS2_WAIT_CLK_LO
-    
 w_tmp
-    ;PS2_WAIT_CLK_LO
-    ;PS2_WAIT_CLK_HI
     
     rrf   tdata, f
     banksel PS2_DAT_PORT
-    ;banksel STATUS
-    ;movf    C, 0
-    ;xorwf   parity, f
     btfss   STATUS, C
     goto    $+2
     goto    $+3
-    ;PS2_DAT_LO
-    ;banksel PS2_DAT_PORT
     bcf   PS2_DAT_PORT, PS2_DAT_PIN
-    ;movlw 0x0
-    ;xorwf parity, f
     goto    w_done
-    ;PS2_DAT_HI
-    ;banksel PS2_DAT_PORT
     bsf   PS2_DAT_PORT, PS2_DAT_PIN
     movlw 0x1
     xorwf parity, f
 w_done    
     
-    ;PS2_WAIT_CLK_LO
-    
-    ;PS2_DAT_HI
-    
     PS2_WAIT_CLK_LO
     PS2_WAIT_CLK_HI
-    ;PS2_WAIT_CLK_LO
     
     nop
     nop
@@ -438,54 +466,35 @@ w_done
     decfsz counter, f
     goto   w_tmp
     
-    ;PS2_WAIT_CLK_LO    ; Send parity bit
-    ;PS2_WAIT_CLK_HI    ; Send parity bit
+    ; Send parity bit
     
     rrf  parity, f
     banksel PS2_DAT_PORT
-    ;banksel STATUS
     btfss   STATUS, C
     goto    $+2
     goto    $+3
     bcf   PS2_DAT_PORT, PS2_DAT_PIN
     goto    wp_done
     bsf   PS2_DAT_PORT, PS2_DAT_PIN
-    ;PS2_DAT_HI
     
 wp_done   
     
     PS2_WAIT_CLK_LO
     PS2_WAIT_CLK_HI
-    ;PS2_WAIT_CLK_LO
-    
     
     banksel PS2_DAT_TRIS
     bsf     PS2_DAT_TRIS, PS2_DAT_PIN
     
     ;stop bit
-    ;PS2_WAIT_CLK_LO
-    ;PS2_WAIT_CLK_HI
-
-    
-    ;banksel PS2_DAT_PORT
-    ;btfsc   PS2_DAT_PORT, PS2_DAT_PIN
-    ;goto    $-1
     
     PS2_WAIT_CLK_LO
     PS2_WAIT_CLK_HI
-    ;PS2_WAIT_CLK_LO
     
     ;Wait for acknowledgemet by device
     PS2_WAIT_DAT_LO
     PS2_WAIT_CLK_LO
     PS2_WAIT_CLK_HI
     PS2_WAIT_DAT_HI
-    
-    ;PS2_DISABLE_COMM
-    
-    ;movlw   .60
-    ;pagesel delay_ms
-    ;call    delay_ms
     
     return
     
@@ -540,41 +549,12 @@ ztn
 uart_print_hex
 	movwf temp_2
 	
-	;swapf   temp, 0
-	;movf    temp, w
-	;andlw   0x0f
-	;addlw   '0'
-	;movwf   temp_2
-	;sublw   '9'
-	;movlw   .0
-	;btfsc   STATUS, C
-	;movlw   'A' - '9'
-	;addwf   temp_2, f
 	swapf   temp_2, w
 	andlw 0x0f
-	;andwf temp_2, w
-	
-	;movf    temp_2, w
 	pagesel hex2ascii
 	call    hex2ascii
-	;pagesel TXPoll
-	;call    TXPoll
-	
-	;movlw  0x0f
-	;andwf  temp, 0
-	;addlw  '0'
-;	movwf   temp_2
-;	sublw   '9'
-;	movlw   .0
-;	btfsc   STATUS, C
-;	movlw   'A' - '9'
-;	addwf   temp_2, f
-	;swapf   temp_2, f
 	movf  temp_2, w
 	andlw 0x0f
-	;andwf temp_2, w
-	;movf    temp_2, w
-	;andlw   0x0f
 	pagesel hex2ascii
 	call    hex2ascii
 	
@@ -599,8 +579,6 @@ ms_read
     ;banksel PS2_DAT_TRIS
     ;bsf     PS2_DAT_TRIS, PS2_DAT_PIN
     
-    bcf     STATUS, C
-    
     movlw   .8
     movwf   counter
     
@@ -617,9 +595,9 @@ r_bits
     ;PS2_WAIT_CLK_LO
     PS2_WAIT_CLK_HI
     
-    movlw   .5
-    pagesel delay_us
-    call    delay_us
+    ;movlw   .5
+    ;pagesel delay_us
+    ;call    delay_us
     
     banksel PS2_DAT_PORT
     btfss   PS2_DAT_PORT, PS2_DAT_PIN
@@ -640,9 +618,9 @@ r_bit_done
     ;PS2_WAIT_CLK_LO
     PS2_WAIT_CLK_HI
     
-    movlw   .5
-    pagesel delay_us
-    call    delay_us
+    ;movlw   .5
+    ;pagesel delay_us
+    ;call    delay_us
     
     banksel PS2_DAT_PORT
     btfss   PS2_DAT_PORT, PS2_DAT_PIN
@@ -651,39 +629,18 @@ r_bit_done
     goto    r_parity_done
     bcf     parity, 0
     
-    ;PS2_WAIT_CLK_HI
+r_parity_done
     PS2_WAIT_CLK_LO
     
-r_parity_done
     ; stop bit
-    ;PS2_WAIT_CLK_LO
+    
     PS2_WAIT_CLK_HI
     
     ;banksel PS2_DAT_PORT
     ;btfsc   PS2_DAT_PORT, PS2_DAT_PIN
     ;goto    $-1
     
-    ;PS2_WAIT_CLK_HI
     PS2_WAIT_CLK_LO
-    
-;    banksel PS2_CLK_TRIS
-;    bcf     PS2_CLK_TRIS, PS2_CLK_PIN
-;    
-;    banksel PS2_CLK_PORT
-;    bcf     PS2_CLK_PORT, PS2_CLK_PIN
-    
-    ;movlw   .60
-    ;pagesel delay_ms
-    ;call    delay_ms
-    
-    ;PS2_DISABLE_COMM
-    
-    PS2_WAIT_CLK_HI                    ;stop bit
-    PS2_WAIT_CLK_LO
-    
-    ;movlw   .5
-    ;pagesel delay_us
-    ;call    delay_us
     
     movf    tdata, w
     
@@ -729,7 +686,8 @@ device_init
     banksel ADCON0
     bcf ADCON0, ADON            ;Disable ADC
     
-    movlw b'10000111'              ; Setting OPTION_REG, Pullup enable PSA = 1:256
+    ;movlw b'10000111'              ; Setting OPTION_REG, Pullup enable PSA = 1:256
+    movlw b'00000111'              ; Setting OPTION_REG, Pullup enable PSA = 1:256
     banksel OPTION_REG
     movwf   OPTION_REG
     
