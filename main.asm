@@ -156,15 +156,21 @@ temp_2
 temp_3
 ms_btn
 ms_x
-ms_y	    
+ms_y
+ms_ps2_initialized
+ms_serial_initialized	    
 endc
 
 ; example of using Shared Uninitialized Data Section
-INT_VAR     UDATA_SHR      
+INT_VAR     UDATA_SHR
+ms_x_inc       RES   2
+ms_y_inc       RES   2
+ms_send_bytes  RES   3
 
 
 ; example of using Uninitialized Data Section
 TEMP_VAR    UDATA           ; explicit address specified is not required
+
 
 
 
@@ -196,8 +202,11 @@ start
     ;call    delay_ms
     ;call    delay_ms                   ; wait for device to settle
     
-    banksel PORTB
-    bcf     PORTB, RB2
+;    banksel PORTB
+;    bcf     PORTB, RB2
+    
+    clrf ms_ps2_initialized
+    clrf ms_serial_initialized
     
     pagesel  ms_init
     call     ms_init
@@ -216,6 +225,29 @@ start
     
     pagesel ms_read
     call    ms_read
+    
+    PS2_DISABLE_COMM
+    
+    movlw .100
+    pagesel delay_us
+    call    delay_us
+    
+    banksel PORTB
+    btfsc   PORTB, RB2
+    goto    $-1
+    
+_probe_loop
+    pagesel  rs232_probe
+    call     rs232_probe
+    
+    banksel PORTB
+    btfss   PORTB, RB2
+    goto    _probe_loop
+    
+    movlw .100
+    pagesel delay_ms
+    call    delay_ms
+    
     
 ;    movlw .200
 ;    pagesel delay_us
@@ -276,14 +308,17 @@ start
 ;    pagesel ms_read
 ;    call    ms_read
     
-    PS2_DISABLE_COMM
+;    PS2_DISABLE_COMM
+;    
+;    movlw .100
+;    pagesel delay_us
+;    call    delay_us
     
-    movlw .100
-    pagesel delay_us
-    call    delay_us
     
+read_loop   
+    clrf ms_x_inc
+    clrf ms_y_inc
     
-read_loop    
     banksel PORTB
     bcf     PORTB, RB2
     
@@ -305,25 +340,144 @@ read_loop
     call    ms_read
     movwf   ms_x
     
-    
     pagesel ms_read
     call    ms_read
     movwf   ms_y
     
-    banksel PORTB
-    bsf     PORTB, RB2
+;    banksel PORTB
+;    bsf     PORTB, RB2
     
-    movf    ms_btn, w
-    pagesel uart_print_hex
-    call    uart_print_hex
+    ;movf    ms_btn, w
+    ;pagesel uart_print_hex
+    ;call    uart_print_hex
     
-    movlw   0x0D
+;    movlw ','
+;    pagesel TXPoll
+;    call    TXPoll
+;    
+;    movlw 'X'
+;    pagesel TXPoll
+;    call    TXPoll
+;    
+;    movlw '='
+;    pagesel TXPoll
+;    call    TXPoll
+;    
+;    movf  ms_x, w
+;    movwf ms_x_inc
+;    
+;    btfsc ms_btn, 4
+;    goto  neg_ms_x
+;    goto  ms_x_done
+    
+;neg_ms_x:
+;    movlw 0xff
+;    movwf ms_x_inc + 1
+;    movlw '-'
+;    pagesel TXPoll
+;    call    TXPoll
+;    
+;ms_x_done:
+;    movf    ms_x_inc, w
+;    pagesel uart_print_hex
+;    call    uart_print_hex
+;    
+;    movlw ','
+;    pagesel TXPoll
+;    call    TXPoll
+;    
+;    movlw 'Y'
+;    pagesel TXPoll
+;    call    TXPoll
+;    
+;    movlw '='
+;    pagesel TXPoll
+;    call    TXPoll
+;    
+;    movf  ms_y, w
+;    movwf ms_y_inc
+;    
+;    btfsc ms_btn, 5
+;    goto  neg_ms_y
+;    goto  ms_y_done
+;    
+;neg_ms_y:
+;    movlw 0xff
+;    movwf ms_y_inc + 1
+;    movlw '-'
+;    pagesel TXPoll
+;    call    TXPoll
+;    
+;ms_y_done:
+;    movf    ms_y_inc, w
+;    pagesel uart_print_hex
+;    call    uart_print_hex
+    
+    movf    ms_x, w
+    movwf   ms_x_inc
+    
+    bcf STATUS, C
+    btfsc ms_btn, 4
+    bsf STATUS, C
+    rrf ms_x_inc, f
+    
+    movf    ms_y, w
+    movwf   ms_y_inc
+    
+    bcf STATUS, C
+    btfsc ms_btn, 5
+    bsf STATUS, C
+    rrf ms_y_inc, f
+    
+    ;------------------------------------------------
+    clrf    ms_send_bytes
+    clrf    ms_send_bytes + 1
+    clrf    ms_send_bytes + 2
+    
+    movlw   b'11000000'
+    movwf   ms_send_bytes
+    btfsc   ms_btn, 0                ; Left button
+    bsf     ms_send_bytes, 5
+    btfsc   ms_btn, 1                ; Right button
+    bsf     ms_send_bytes, 4
+    btfsc   ms_y_inc, 7
+    bsf     ms_send_bytes, 3
+    btfsc   ms_y_inc, 6
+    bsf     ms_send_bytes, 2
+    btfsc   ms_x_inc, 7
+    bsf     ms_send_bytes, 1
+    btfsc   ms_x_inc, 6
+    bsf     ms_send_bytes, 0
+    
+    movlw   0x3f
+    andwf   ms_x_inc, w
+    movwf   ms_send_bytes + 1
+    
+    movlw   0x3f
+    andwf   ms_y_inc, w
+    movwf   ms_send_bytes + 2
+    
+    ; Send the bytes, should convert into 7N2 format
+    movf ms_send_bytes, w
     pagesel TXPoll
     call    TXPoll
     
-    movlw   0x0A
+    movf ms_send_bytes + 1, w
     pagesel TXPoll
     call    TXPoll
+    
+    movf ms_send_bytes + 2, w
+    pagesel TXPoll
+    call    TXPoll
+    ;------------------------------------------------
+    
+;    movlw   0x0D
+;    pagesel TXPoll
+;    call    TXPoll
+;    
+;    movlw   0x0A
+;    pagesel TXPoll
+;    call    TXPoll
     
     
     goto read_loop
@@ -349,8 +503,8 @@ ms_init
     pagesel ms_read
     call    ms_read
     
-    pagesel uart_print_hex
-    call    uart_print_hex
+;    pagesel uart_print_hex
+;    call    uart_print_hex
     
     movlw   PS2_CMD_SET_RATE
     pagesel ms_write
@@ -396,6 +550,24 @@ ms_init
     
     pagesel ms_read
     call    ms_read
+    
+    movlw   0x01
+    movwf   ms_ps2_initialized
+    
+    return
+    
+rs232_probe
+    movlw .14
+    pagesel delay_ms
+    call    delay_ms
+    
+    movlw  'M'
+    pagesel TXPoll
+    call    TXPoll
+    
+    ;movlw .300
+    ;pagesel delay_ms
+    ;call    delay_ms
     
     return
     
@@ -686,7 +858,7 @@ device_init
     banksel ADCON0
     bcf ADCON0, ADON            ;Disable ADC
     
-    ;movlw b'10000111'              ; Setting OPTION_REG, Pullup enable PSA = 1:256
+    ;movlw b'10000111'              ; Setting OPTION_REG, Pullup disable PSA = 1:256
     movlw b'00000111'              ; Setting OPTION_REG, Pullup enable PSA = 1:256
     banksel OPTION_REG
     movwf   OPTION_REG
@@ -711,11 +883,13 @@ device_init
     banksel TXREG
     clrf    TXREG
     
-    movlw   0x81           ;9600 bps
+    ;movlw   0x81           ;9600 bps
+    movlw   0xff              ;1200
     banksel SPBRG
     movwf   SPBRG
     
-    movlw   0x24
+    ;movlw   0x24
+    movlw   0x20             ;1200
     banksel TXSTA
     movwf   TXSTA
     
@@ -728,10 +902,10 @@ device_init
     ;bsf     PORTB, RB0  
     ;Testing
     banksel TRISB
-    bcf     TRISB, RB2
-    
-    banksel PORTB
-    bcf     PORTB, RB2
+    bsf     TRISB, RB2
+;    
+;    banksel PORTB
+;    bcf     PORTB, RB2
     
     return
     
