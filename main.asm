@@ -42,10 +42,13 @@
 		; PS2 Ports and Pins
 #define		PS2_CLK_PORT		PORTB			; Clock line port, config, and pin
 #define		PS2_CLK_TRIS		TRISB
-#define		PS2_CLK_PIN		1
+#define		PS2_CLK_PIN		2
 #define		PS2_DAT_PORT		PORTB			; Data line port, config, and pin
 #define		PS2_DAT_TRIS		TRISB
-#define		PS2_DAT_PIN		0
+#define		PS2_DAT_PIN		1
+#define		RS232_RTS_PORT		PORTB	
+#define		RS232_RTS_TRIS		TRISB
+#define         RS232_RTS_PIN           0
 #define         PS2_CMD_RESET           0xFF
 #define         PS2_CMD_RESEND          0xFE
 #define         PS2_CMD_DEFAULT         0xF6		
@@ -143,6 +146,16 @@ PS2_DISABLE_COMM MACRO
 	    bcf     PS2_CLK_TRIS, PS2_CLK_PIN
 	    ENDM
 	    
+DISABLE_INT MACRO
+	    banksel INTCON
+	    bcf     INTCON, GIE
+	    ENDM
+	    
+ENABLE_INT MACRO
+	    banksel INTCON
+	    bsf     INTCON, GIE
+	    ENDM
+	    
 		
 ;***** VARIABLE DEFINITIONS (examples)
 	    
@@ -188,7 +201,35 @@ RESET_VECTOR    CODE    0x0000  ; processor reset vector
 INT_VECTOR      CODE    0x0004  ; interrupt vector location
 
 INTERRUPT
-
+      ; Check what triggered the interrupt
+      banksel INTCON
+      btfsc INTCON, INTF
+      goto  _pin0_int
+      goto  _int_done
+      
+_pin0_int
+      banksel OPTION_REG
+      btfsc     OPTION_REG, INTEDG  ;check the type, if falling edge int will fire, rts is pulled high
+      goto _int_rts_stop
+      
+      banksel OPTION_REG
+      bsf     OPTION_REG, INTEDG
+      
+      btfsc   ms_serial_initialized, 0
+      goto    _int_done
+      
+      pagesel rs232_probe
+      call    rs232_probe
+      goto    _int_done
+      
+_int_rts_stop
+      bcf ms_serial_initialized, 0
+      banksel OPTION_REG
+      bcf     OPTION_REG, INTEDG
+      
+_int_done
+    banksel INTCON
+    bcf     INTCON, INTF
     retfie              ; return from interrupt
 
 MAIN_PROG       CODE
@@ -232,17 +273,20 @@ start
     pagesel delay_us
     call    delay_us
     
-    banksel PORTB
-    btfsc   PORTB, RB2
+    btfss   ms_serial_initialized, 0
     goto    $-1
     
-_probe_loop
-    pagesel  rs232_probe
-    call     rs232_probe
+;    banksel PORTB
+;    btfsc   PORTB, RB2
+;    goto    $-1
     
-    banksel PORTB
-    btfss   PORTB, RB2
-    goto    _probe_loop
+;_probe_loop
+;    pagesel  rs232_probe
+;    call     rs232_probe
+;    
+;    banksel PORTB
+;    btfss   PORTB, RB2
+;    goto    _probe_loop
     
     movlw .100
     pagesel delay_ms
@@ -490,6 +534,8 @@ ms_init
     pagesel delay_ms
     call    delay_ms
     
+    DISABLE_INT
+    
     movlw   0xff
     pagesel ms_write
     call    ms_write
@@ -551,6 +597,8 @@ ms_init
     pagesel ms_read
     call    ms_read
     
+    ENABLE_INT
+    
     movlw   0x01
     movwf   ms_ps2_initialized
     
@@ -565,9 +613,11 @@ rs232_probe
     pagesel TXPoll
     call    TXPoll
     
-    ;movlw .300
-    ;pagesel delay_ms
-    ;call    delay_ms
+    movlw .100
+    pagesel delay_ms
+    call    delay_ms
+    
+    bsf  ms_serial_initialized, 0
     
     return
     
@@ -576,6 +626,8 @@ ms_write
     movwf   tdata
     movlw   0x01
     movwf   parity
+    
+    DISABLE_INT
     
     movlw   .8
     movwf   counter
@@ -668,6 +720,8 @@ wp_done
     PS2_WAIT_CLK_HI
     PS2_WAIT_DAT_HI
     
+    ENABLE_INT
+    
     return
     
 ;--------------------------------------------------
@@ -751,6 +805,8 @@ ms_read
     ;banksel PS2_DAT_TRIS
     ;bsf     PS2_DAT_TRIS, PS2_DAT_PIN
     
+    DISABLE_INT
+    
     movlw   .8
     movwf   counter
     
@@ -814,6 +870,8 @@ r_parity_done
     
     PS2_WAIT_CLK_LO
     
+    ENABLE_INT
+    
     movf    tdata, w
     
     return
@@ -858,8 +916,8 @@ device_init
     banksel ADCON0
     bcf ADCON0, ADON            ;Disable ADC
     
-    ;movlw b'10000111'              ; Setting OPTION_REG, Pullup disable PSA = 1:256
-    movlw b'00000111'              ; Setting OPTION_REG, Pullup enable PSA = 1:256
+    movlw b'10000111'              ; Setting OPTION_REG, Pullup disable PSA = 1:256
+    ;movlw b'00000111'              ; Setting OPTION_REG, Pullup enable PSA = 1:256
     banksel OPTION_REG
     movwf   OPTION_REG
     
@@ -906,6 +964,21 @@ device_init
 ;    
 ;    banksel PORTB
 ;    bcf     PORTB, RB2
+    ; Enabling pin 0 interrupt
+    
+    banksel RS232_RTS_TRIS
+    bsf     RS232_RTS_TRIS, RS232_RTS_PIN
+    
+    banksel INTCON
+    bsf     INTCON, INTE
+    banksel OPTION_REG
+    bcf     OPTION_REG, INTEDG  ;falling edge trigger
+    
+    ;banksel INTCON
+    ;bsf  INTCON, PEIE
+    ;bsf     INTCON, GIE
+    
+    ENABLE_INT
     
     return
     
