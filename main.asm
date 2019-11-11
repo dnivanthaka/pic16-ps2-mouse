@@ -65,6 +65,10 @@
 #define		PS2_CMD_SET_RESOLUTION	0xE8
 #define		PS2_CMD_SET_SCALE_2_1	0xE7
 #define		PS2_CMD_SET_SCALE_1_1	0xE6
+		
+#define		SERIAL_2_PORT		PORTB	
+#define		SERIAL_2_TRIS		TRISB
+#define         SERIAL_2_PIN           3
 
 		
 PS2_CLK_HI MACRO    
@@ -156,7 +160,15 @@ ENABLE_INT MACRO
 	    bsf     INTCON, GIE
 	    ENDM
 	    
-		
+SERIAL_2_HI MACRO
+	    banksel SERIAL_2_PORT
+	    bsf     SERIAL_2_PORT, SERIAL_2_PIN
+	    ENDM
+		    
+SERIAL_2_LO MACRO
+	    banksel SERIAL_2_PORT
+	    bcf     SERIAL_2_PORT, SERIAL_2_PIN
+	    ENDM		
 ;***** VARIABLE DEFINITIONS (examples)
 	    
 cblock 0x20 
@@ -204,10 +216,10 @@ INTERRUPT
       ; Check what triggered the interrupt
       banksel INTCON
       btfsc INTCON, INTF
-      goto  _pin0_int
+      goto  _rts_int
       goto  _int_done
       
-_pin0_int
+_rts_int
       banksel OPTION_REG
       btfsc     OPTION_REG, INTEDG  ;check the type, if falling edge int will fire, rts is pulled high
       goto _int_rts_stop
@@ -215,21 +227,24 @@ _pin0_int
       banksel OPTION_REG
       bsf     OPTION_REG, INTEDG
       
-      btfsc   ms_serial_initialized, 0
-      goto    _int_done
+      ;btfsc   ms_serial_initialized, 0
+      ;goto    _int_done
       
       pagesel rs232_probe
       call    rs232_probe
-      goto    _int_done
+      goto    _int_rts_done
       
 _int_rts_stop
       bcf ms_serial_initialized, 0
       banksel OPTION_REG
       bcf     OPTION_REG, INTEDG
-      
-_int_done
+    
+_int_rts_done      
     banksel INTCON
     bcf     INTCON, INTF
+      
+_int_done
+
     retfie              ; return from interrupt
 
 MAIN_PROG       CODE
@@ -259,6 +274,10 @@ start
     ;pagesel ms_read
     ;call    ms_read
     
+    movlw 'X'
+    pagesel TXPoll2
+;    call    TXPoll2
+    
     ;movlw PS2_CMD_EN_DAT_RPT
     movlw 0xF0
     pagesel ms_write
@@ -273,90 +292,10 @@ start
     pagesel delay_us
     call    delay_us
     
-    btfss   ms_serial_initialized, 0
-    goto    $-1
-    
-;    banksel PORTB
-;    btfsc   PORTB, RB2
-;    goto    $-1
-    
-;_probe_loop
-;    pagesel  rs232_probe
-;    call     rs232_probe
-;    
-;    banksel PORTB
-;    btfss   PORTB, RB2
-;    goto    _probe_loop
-    
     movlw .100
     pagesel delay_ms
     call    delay_ms
     
-    
-;    movlw .200
-;    pagesel delay_us
-;    call    delay_us
-    
-        
-;    movlw   0x0D
-;    pagesel TXPoll
-;    call    TXPoll
-;    
-;    movlw   0x0A
-;    pagesel TXPoll
-;    call    TXPoll
-    
-;    movlw 0xEB
-;    pagesel ms_write
-;    call    ms_write
-;    
-;    pagesel ms_read
-;    call    ms_read
-    
-    ;pagesel uart_print_hex
-    ;call    uart_print_hex
-    
-;    pagesel ms_read
-;    call    ms_read
-    
-;    pagesel uart_print_hex
-;    call    uart_print_hex
-    
-    ;movlw 0xEB
-    ;pagesel ms_write
-    ;call    ms_write
-    
-;    pagesel ms_read
-;    call    ms_read
-    
-;    pagesel ms_read
-;    call    ms_read
-    
-;    pagesel uart_print_hex
-;    call    uart_print_hex
-;    
-;    pagesel ms_read
-;    call    ms_read
-;;    
-;    pagesel uart_print_hex
-;    call    uart_print_hex
-    
-    ;movf    ms_btn, w
-    ;pagesel uart_print_hex
-    ;call    uart_print_hex
-    
-;    movlw PS2_CMD_EN_DAT_RPT
-;    pagesel ms_write
-;    call    ms_write
-;    
-;    pagesel ms_read
-;    call    ms_read
-    
-;    PS2_DISABLE_COMM
-;    
-;    movlw .100
-;    pagesel delay_us
-;    call    delay_us
     
     
 read_loop   
@@ -365,6 +304,9 @@ read_loop
     
     banksel PORTB
     bcf     PORTB, RB2
+    
+    ;btfss   ms_serial_initialized, 0
+    ;goto    $-1
     
     movlw 0xEB
     pagesel ms_write
@@ -513,6 +455,10 @@ read_loop
     movf ms_send_bytes + 2, w
     pagesel TXPoll
     call    TXPoll
+    
+    movlw 'X'
+    pagesel TXPoll2
+    call    TXPoll2
     ;------------------------------------------------
     
 ;    movlw   0x0D
@@ -750,6 +696,85 @@ TXPoll
 
 	return
 ;-----------------------------
+;Software serial TX, 7N1 format
+TXPoll2:
+        movwf   tdata
+	movlw   .8
+	movwf   counter
+	
+	SERIAL_2_LO                ;start bit
+	
+	movlw   .230
+	pagesel delay_us
+	call    delay_us
+	
+	movlw   .250
+	pagesel delay_us
+	call    delay_us
+	
+	movlw   .250
+	pagesel delay_us
+	call    delay_us
+	
+	movlw   .250
+	pagesel delay_us
+	call    delay_us
+	
+sw_serial_loop
+	
+	rrf tdata, f
+	btfss STATUS, C
+	goto  sw_serial_zero
+	goto  sw_serial_one
+	
+sw_serial_zero
+	SERIAL_2_LO
+	goto sw_serial_done
+	
+sw_serial_one
+	SERIAL_2_HI
+
+sw_serial_done	
+	movlw   .230
+	pagesel delay_us
+	call    delay_us
+	
+	movlw   .250
+	pagesel delay_us
+	call    delay_us
+	
+	movlw   .250
+	pagesel delay_us
+	call    delay_us
+	
+	movlw   .250
+	pagesel delay_us
+	call    delay_us
+	
+	decfsz counter, f
+	goto sw_serial_loop
+	
+	;stop bit
+	SERIAL_2_HI
+	
+	movlw   .230
+	pagesel delay_us
+	call    delay_us
+	
+	movlw   .250
+	pagesel delay_us
+	call    delay_us
+	
+	movlw   .250
+	pagesel delay_us
+	call    delay_us
+	
+	movlw   .250
+	pagesel delay_us
+	call    delay_us
+
+	return
+;-----------------------------
 hex2ascii
 	movwf	temp
 	btfss	temp, 3
@@ -961,6 +986,12 @@ device_init
     ;Testing
     banksel TRISB
     bsf     TRISB, RB2
+    
+    ;Soft serial TX port
+    SERIAL_2_HI
+    
+    banksel SERIAL_2_TRIS
+    bcf     SERIAL_2_TRIS, SERIAL_2_PIN
 ;    
 ;    banksel PORTB
 ;    bcf     PORTB, RB2
@@ -978,7 +1009,8 @@ device_init
     ;bsf  INTCON, PEIE
     ;bsf     INTCON, GIE
     
-    ENABLE_INT
+    ;ENABLE_INT
+    DISABLE_INT
     
     return
     
