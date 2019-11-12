@@ -173,6 +173,7 @@ SERIAL_2_LO MACRO
 	    
 cblock 0x20 
 time_scaler
+time_scaler_ms
 parity
 tdata
 counter
@@ -330,75 +331,6 @@ read_loop
     call    ms_read
     movwf   ms_y
     
-;    banksel PORTB
-;    bsf     PORTB, RB2
-    
-    ;movf    ms_btn, w
-    ;pagesel uart_print_hex
-    ;call    uart_print_hex
-    
-;    movlw ','
-;    pagesel TXPoll
-;    call    TXPoll
-;    
-;    movlw 'X'
-;    pagesel TXPoll
-;    call    TXPoll
-;    
-;    movlw '='
-;    pagesel TXPoll
-;    call    TXPoll
-;    
-;    movf  ms_x, w
-;    movwf ms_x_inc
-;    
-;    btfsc ms_btn, 4
-;    goto  neg_ms_x
-;    goto  ms_x_done
-    
-;neg_ms_x:
-;    movlw 0xff
-;    movwf ms_x_inc + 1
-;    movlw '-'
-;    pagesel TXPoll
-;    call    TXPoll
-;    
-;ms_x_done:
-;    movf    ms_x_inc, w
-;    pagesel uart_print_hex
-;    call    uart_print_hex
-;    
-;    movlw ','
-;    pagesel TXPoll
-;    call    TXPoll
-;    
-;    movlw 'Y'
-;    pagesel TXPoll
-;    call    TXPoll
-;    
-;    movlw '='
-;    pagesel TXPoll
-;    call    TXPoll
-;    
-;    movf  ms_y, w
-;    movwf ms_y_inc
-;    
-;    btfsc ms_btn, 5
-;    goto  neg_ms_y
-;    goto  ms_y_done
-;    
-;neg_ms_y:
-;    movlw 0xff
-;    movwf ms_y_inc + 1
-;    movlw '-'
-;    pagesel TXPoll
-;    call    TXPoll
-;    
-;ms_y_done:
-;    movf    ms_y_inc, w
-;    pagesel uart_print_hex
-;    call    uart_print_hex
-    
     movf    ms_x, w
     movwf   ms_x_inc
     
@@ -444,15 +376,21 @@ read_loop
     movwf   ms_send_bytes + 2
     
     ; Send the bytes, should convert into 7N2 format
-    movf ms_send_bytes, w
+    movlw   b'10000000'
+    iorwf   ms_send_bytes, w
+    ;movf    ms_send_bytes, w
     pagesel TXPoll
     call    TXPoll
     
-    movf ms_send_bytes + 1, w
+    movlw   b'10000000'
+    iorwf   ms_send_bytes + 1, w
+    ;movf ms_send_bytes + 1, w
     pagesel TXPoll
     call    TXPoll
     
-    movf ms_send_bytes + 2, w
+    movlw   b'10000000'
+    iorwf   ms_send_bytes + 2, w
+    ;movf ms_send_bytes + 2, w
     pagesel TXPoll
     call    TXPoll
     
@@ -704,7 +642,7 @@ TXPoll2:
 	
 	SERIAL_2_LO                ;start bit
 	
-	movlw   .230
+	movlw   .83
 	pagesel delay_us
 	call    delay_us
 	
@@ -735,7 +673,7 @@ sw_serial_one
 	SERIAL_2_HI
 
 sw_serial_done	
-	movlw   .230
+	movlw   .83
 	pagesel delay_us
 	call    delay_us
 	
@@ -757,7 +695,7 @@ sw_serial_done
 	;stop bit
 	SERIAL_2_HI
 	
-	movlw   .230
+	movlw   .83
 	pagesel delay_us
 	call    delay_us
 	
@@ -1017,19 +955,35 @@ device_init
 ;------------------------------------------------------------------------------
     
 delay_ms
-    movwf time_scaler
+    movwf time_scaler_ms
     
+;w_inner    
+    ;banksel TMR0
+    ;clrf    TMR0
+    
+;w_tmr0
+;    movf   TMR0, w
+;    xorlw  .200                  ; 0.2 * 256 = 51.2us, 51.2 * 200 = ~1ms
+;    btfss  STATUS, Z
+;    goto   w_tmr0
 w_inner    
-    banksel TMR0
-    clrf    TMR0
+    movlw .250
+    pagesel delay_us
+    call    delay_us
     
-w_tmr0
-    movf   TMR0, w
-    xorlw  .200                  ; 0.2 * 256 = 51.2us, 51.2 * 200 = ~1ms
-    btfss  STATUS, Z
-    goto   w_tmr0
+    movlw .250
+    pagesel delay_us
+    call    delay_us
     
-    decfsz time_scaler, f
+    movlw .250
+    pagesel delay_us
+    call    delay_us
+    
+    movlw .250
+    pagesel delay_us
+    call    delay_us
+    
+    decfsz time_scaler_ms, f
     goto   w_inner
     
     return
@@ -1040,7 +994,7 @@ delay_us
 us_loop
     nop
     nop
-    nop
+    ;nop
     ;nop
     ;nop
     decfsz  time_scaler, f
