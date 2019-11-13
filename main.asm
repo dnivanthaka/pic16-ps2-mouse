@@ -181,22 +181,24 @@ temp
 temp_2
 temp_3
 ms_btn
+ms_btn_prev
 ms_x
 ms_y
 ms_ps2_initialized
-ms_serial_initialized	    
+ms_serial_initialized
+ms_events
+tmp_int_w
 endc
 
 ; example of using Shared Uninitialized Data Section
 INT_VAR     UDATA_SHR
 ms_x_inc       RES   2
 ms_y_inc       RES   2
-ms_send_bytes  RES   3
+ms_send_bytes  RES   4
 
 
 ; example of using Uninitialized Data Section
 TEMP_VAR    UDATA           ; explicit address specified is not required
-
 
 
 
@@ -214,6 +216,7 @@ RESET_VECTOR    CODE    0x0000  ; processor reset vector
 INT_VECTOR      CODE    0x0004  ; interrupt vector location
 
 INTERRUPT
+      movwf tmp_int_w
       ; Check what triggered the interrupt
       banksel INTCON
       btfsc INTCON, INTF
@@ -221,22 +224,30 @@ INTERRUPT
       goto  _int_done
       
 _rts_int
-      banksel OPTION_REG
-      btfsc     OPTION_REG, INTEDG  ;check the type, if falling edge int will fire, rts is pulled high
-      goto _int_rts_stop
-      
-      banksel OPTION_REG
-      bsf     OPTION_REG, INTEDG
+;      banksel OPTION_REG
+;      btfsc     OPTION_REG, INTEDG  ;check the type, if falling edge int will fire, rts is pulled high
+;      goto _int_rts_stop
+;      
+;      banksel OPTION_REG
+;      bsf     OPTION_REG, INTEDG
       
       ;btfsc   ms_serial_initialized, 0
       ;goto    _int_done
       
       pagesel rs232_probe
       call    rs232_probe
+      
+      movlw 'H'
+      pagesel TXPoll2
+      call    TXPoll2
+      
       goto    _int_rts_done
       
 _int_rts_stop
       bcf ms_serial_initialized, 0
+;      movlw 'O'
+;      pagesel TXPoll2
+;      call    TXPoll2
       banksel OPTION_REG
       bcf     OPTION_REG, INTEDG
     
@@ -245,7 +256,7 @@ _int_rts_done
     bcf     INTCON, INTF
       
 _int_done
-
+    movf tmp_int_w, w
     retfie              ; return from interrupt
 
 MAIN_PROG       CODE
@@ -297,17 +308,21 @@ start
     pagesel delay_ms
     call    delay_ms
     
-    
+    clrf  ms_btn_prev
     
 read_loop   
     clrf ms_x_inc
+    clrf ms_x_inc + 1
     clrf ms_y_inc
+    clrf ms_y_inc + 1
+    
+    clrf ms_events;
     
     banksel PORTB
     bcf     PORTB, RB2
     
-    ;btfss   ms_serial_initialized, 0
-    ;goto    $-1
+;    btfss   ms_serial_initialized, 0
+;    goto    $-1
     
     movlw 0xEB
     pagesel ms_write
@@ -337,7 +352,7 @@ read_loop
     bcf STATUS, C
     btfsc ms_btn, 4
     bsf STATUS, C
-    rrf ms_x_inc, f
+    rlf ms_x_inc + 1, f
     
     movf    ms_y, w
     movwf   ms_y_inc
@@ -345,12 +360,43 @@ read_loop
     bcf STATUS, C
     btfsc ms_btn, 5
     bsf STATUS, C
-    rrf ms_y_inc, f
+    rlf ms_y_inc + 1, f
+    
+;    movf    ms_events, w
+;    pagesel uart_print_hex
+;    call    uart_print_hex
+    
+    ; check for new events
+    movf ms_btn_prev, w
+    subwf ms_btn, w
+    btfss STATUS, Z
+    bsf   ms_events, 0
+    
+    movlw .0
+    addwf  ms_x, w
+    btfss STATUS, Z
+    bsf   ms_events, 0
+;    
+    movlw .0
+    addwf ms_y, w
+    btfss STATUS, Z
+    bsf   ms_events, 0
+    
+;    movf    ms_events, w
+;    pagesel uart_print_hex
+;    call    uart_print_hex
+    
+    movf ms_btn, w
+    movwf ms_btn_prev
+;    
+    btfss ms_events, 0
+    goto read_loop
     
     ;------------------------------------------------
     clrf    ms_send_bytes
     clrf    ms_send_bytes + 1
     clrf    ms_send_bytes + 2
+    clrf    ms_send_bytes + 3
     
     movlw   b'11000000'
     movwf   ms_send_bytes
@@ -375,6 +421,9 @@ read_loop
     andwf   ms_y_inc, w
     movwf   ms_send_bytes + 2
     
+    btfsc   ms_btn, 2                  ;middle button
+    bsf     ms_send_bytes + 3, 5
+    
     ; Send the bytes, should convert into 7N2 format
     movlw   b'10000000'
     iorwf   ms_send_bytes, w
@@ -391,6 +440,11 @@ read_loop
     movlw   b'10000000'
     iorwf   ms_send_bytes + 2, w
     ;movf ms_send_bytes + 2, w
+    pagesel TXPoll
+    call    TXPoll
+    
+    movlw   b'10000000'
+    iorwf   ms_send_bytes + 3, w
     pagesel TXPoll
     call    TXPoll
     
@@ -494,6 +548,14 @@ rs232_probe
     call    delay_ms
     
     movlw  'M'
+    pagesel TXPoll
+    call    TXPoll
+    
+    movlw .63
+    pagesel delay_ms
+    call    delay_ms
+    
+    movlw  '3'
     pagesel TXPoll
     call    TXPoll
     
@@ -635,26 +697,30 @@ TXPoll
 	return
 ;-----------------------------
 ;Software serial TX, 7N1 format
-TXPoll2:
+TXPoll2:                           ;4800bps
         movwf   tdata
 	movlw   .8
 	movwf   counter
 	
 	SERIAL_2_LO                ;start bit
 	
-	movlw   .83
-	pagesel delay_us
-	call    delay_us
+;	movlw   .83
+;	pagesel delay_us
+;	call    delay_us
+;	
+;	movlw   .250
+;	pagesel delay_us
+;	call    delay_us
+;	
+;	movlw   .250
+;	pagesel delay_us
+;	call    delay_us
+;	
+;	movlw   .250
+;	pagesel delay_us
+;	call    delay_us
 	
-	movlw   .250
-	pagesel delay_us
-	call    delay_us
-	
-	movlw   .250
-	pagesel delay_us
-	call    delay_us
-	
-	movlw   .250
+	movlw   .208
 	pagesel delay_us
 	call    delay_us
 	
@@ -673,19 +739,23 @@ sw_serial_one
 	SERIAL_2_HI
 
 sw_serial_done	
-	movlw   .83
-	pagesel delay_us
-	call    delay_us
+;	movlw   .83
+;	pagesel delay_us
+;	call    delay_us
+;	
+;	movlw   .250
+;	pagesel delay_us
+;	call    delay_us
+;	
+;	movlw   .250
+;	pagesel delay_us
+;	call    delay_us
+;	
+;	movlw   .250
+;	pagesel delay_us
+;	call    delay_us
 	
-	movlw   .250
-	pagesel delay_us
-	call    delay_us
-	
-	movlw   .250
-	pagesel delay_us
-	call    delay_us
-	
-	movlw   .250
+	movlw   .208
 	pagesel delay_us
 	call    delay_us
 	
@@ -695,19 +765,23 @@ sw_serial_done
 	;stop bit
 	SERIAL_2_HI
 	
-	movlw   .83
-	pagesel delay_us
-	call    delay_us
+;	movlw   .83
+;	pagesel delay_us
+;	call    delay_us
+;	
+;	movlw   .250
+;	pagesel delay_us
+;	call    delay_us
+;	
+;	movlw   .250
+;	pagesel delay_us
+;	call    delay_us
+;	
+;	movlw   .250
+;	pagesel delay_us
+;	call    delay_us
 	
-	movlw   .250
-	pagesel delay_us
-	call    delay_us
-	
-	movlw   .250
-	pagesel delay_us
-	call    delay_us
-	
-	movlw   .250
+	movlw   .208
 	pagesel delay_us
 	call    delay_us
 
@@ -732,7 +806,8 @@ hex2ascii
 ztn
 	movf	temp, w
 	addlw	0x30
-	call	TXPoll
+	pagesel TXPoll2
+	call	TXPoll2
 	return
 	
 uart_print_hex
@@ -947,8 +1022,8 @@ device_init
     ;bsf  INTCON, PEIE
     ;bsf     INTCON, GIE
     
-    ;ENABLE_INT
-    DISABLE_INT
+    ENABLE_INT
+    ;DISABLE_INT
     
     return
     
