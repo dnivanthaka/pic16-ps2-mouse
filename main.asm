@@ -207,7 +207,7 @@ TEMP_VAR    UDATA           ; explicit address specified is not required
 G_DATA      UDATA_OVR       ; explicit address can be specified
 
 
-;**********************************************************************
+;**********************************************************************-
 RESET_VECTOR    CODE    0x0000  ; processor reset vector
     nop                         ; nop for icd
     pagesel start
@@ -224,20 +224,22 @@ INTERRUPT
       goto  _int_done
       
 _rts_int
-;      banksel OPTION_REG
-;      btfsc     OPTION_REG, INTEDG  ;check the type, if falling edge int will fire, rts is pulled high
-;      goto _int_rts_stop
-;      
-;      banksel OPTION_REG
-;      bsf     OPTION_REG, INTEDG
+      banksel OPTION_REG
+      btfsc     OPTION_REG, INTEDG  ;check the type, if falling edge int will fire, rts is pulled high
+      goto _int_rts_stop
+      
+      banksel OPTION_REG
+      bsf     OPTION_REG, INTEDG
       
       ;btfsc   ms_serial_initialized, 0
       ;goto    _int_done
-      
+            movlw 'O'
+      pagesel TXPoll2
+      call    TXPoll2
       pagesel rs232_probe
       call    rs232_probe
       
-      movlw 'H'
+      movlw 'P'
       pagesel TXPoll2
       call    TXPoll2
       
@@ -245,9 +247,9 @@ _rts_int
       
 _int_rts_stop
       bcf ms_serial_initialized, 0
-;      movlw 'O'
-;      pagesel TXPoll2
-;      call    TXPoll2
+      movlw 'U'
+      pagesel TXPoll2
+      call    TXPoll2
       banksel OPTION_REG
       bcf     OPTION_REG, INTEDG
     
@@ -286,8 +288,8 @@ start
     ;pagesel ms_read
     ;call    ms_read
     
-    movlw 'X'
-    pagesel TXPoll2
+;    movlw 'X'
+;    pagesel TXPoll2
 ;    call    TXPoll2
     
     ;movlw PS2_CMD_EN_DAT_RPT
@@ -321,8 +323,33 @@ read_loop
     banksel PORTB
     bcf     PORTB, RB2
     
-;    btfss   ms_serial_initialized, 0
-;    goto    $-1
+    pagesel RS232_RTS_PORT
+    btfsc   RS232_RTS_PORT, RS232_RTS_PIN
+    bcf   ms_serial_initialized, 0
+    
+    pagesel RS232_RTS_PORT
+    btfsc   RS232_RTS_PORT, RS232_RTS_PIN
+    goto    $-1
+    
+    btfss   ms_serial_initialized, 0
+    goto    _probe_do
+    goto    _probe_done
+    
+_probe_do    
+    pagesel rs232_probe
+    call    rs232_probe
+_probe_done
+    
+    movlw .100
+    pagesel delay_ms
+    call    delay_ms
+    
+    btfss   ms_serial_initialized, 0
+    goto    $-1
+    
+    
+    
+    DISABLE_INT
     
     movlw 0xEB
     pagesel ms_write
@@ -345,6 +372,8 @@ read_loop
     pagesel ms_read
     call    ms_read
     movwf   ms_y
+    
+    ENABLE_INT
     
     movf    ms_x, w
     movwf   ms_x_inc
@@ -559,7 +588,7 @@ rs232_probe
     pagesel TXPoll
     call    TXPoll
     
-    movlw .100
+    movlw .150
     pagesel delay_ms
     call    delay_ms
     
@@ -573,7 +602,7 @@ ms_write
     movlw   0x01
     movwf   parity
     
-    DISABLE_INT
+    ;DISABLE_INT
     
     movlw   .8
     movwf   counter
@@ -666,7 +695,7 @@ wp_done
     PS2_WAIT_CLK_HI
     PS2_WAIT_DAT_HI
     
-    ENABLE_INT
+    ;ENABLE_INT
     
     return
     
@@ -720,7 +749,7 @@ TXPoll2:                           ;4800bps
 ;	pagesel delay_us
 ;	call    delay_us
 	
-	movlw   .208
+	movlw   .104
 	pagesel delay_us
 	call    delay_us
 	
@@ -755,7 +784,7 @@ sw_serial_done
 ;	pagesel delay_us
 ;	call    delay_us
 	
-	movlw   .208
+	movlw   .104
 	pagesel delay_us
 	call    delay_us
 	
@@ -781,7 +810,7 @@ sw_serial_done
 ;	pagesel delay_us
 ;	call    delay_us
 	
-	movlw   .208
+	movlw   .104
 	pagesel delay_us
 	call    delay_us
 
@@ -843,7 +872,7 @@ ms_read
     ;banksel PS2_DAT_TRIS
     ;bsf     PS2_DAT_TRIS, PS2_DAT_PIN
     
-    DISABLE_INT
+    ;DISABLE_INT
     
     movlw   .8
     movwf   counter
@@ -908,7 +937,7 @@ r_parity_done
     
     PS2_WAIT_CLK_LO
     
-    ENABLE_INT
+    ;ENABLE_INT
     
     movf    tdata, w
     
@@ -1013,16 +1042,16 @@ device_init
     banksel RS232_RTS_TRIS
     bsf     RS232_RTS_TRIS, RS232_RTS_PIN
     
-    banksel INTCON
-    bsf     INTCON, INTE
-    banksel OPTION_REG
-    bcf     OPTION_REG, INTEDG  ;falling edge trigger
+;    banksel INTCON
+;    bsf     INTCON, INTE
+;    banksel OPTION_REG
+;    bcf     OPTION_REG, INTEDG  ;falling edge trigger
     
     ;banksel INTCON
     ;bsf  INTCON, PEIE
     ;bsf     INTCON, GIE
     
-    ENABLE_INT
+    ;ENABLE_INT
     ;DISABLE_INT
     
     return
