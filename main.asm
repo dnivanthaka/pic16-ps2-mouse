@@ -465,10 +465,14 @@ _probe_done
     btfsc   ms_btn, 2                  ;middle button
     bsf     ms_send_bytes + 3, 5
     
+    ;half the distance to smooth out
+    rrf  ms_send_bytes + 1, w
+    rrf  ms_send_bytes + 2, w
+    
     ; Send the bytes, should convert into 7N2 format
     DISABLE_INT
-;    movlw   b'10000000'
-;    iorwf   ms_send_bytes, w
+    movlw   b'10000000'
+    iorwf   ms_send_bytes, w
     movf    ms_send_bytes, w
     pagesel TXPoll2
     call    TXPoll2
@@ -484,9 +488,9 @@ _probe_done
     ;pagesel uart_print_hex
     ;call    uart_print_hex
     
-    ;movlw   b'10000000'
-    ;iorwf   ms_send_bytes + 2, w
-    movf ms_send_bytes + 2, w
+    movlw   b'10000000'
+    iorwf   ms_send_bytes + 2, w
+    ;movf ms_send_bytes + 2, w
     pagesel TXPoll2
     call    TXPoll2
     ;pagesel uart_print_hex
