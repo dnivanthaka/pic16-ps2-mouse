@@ -433,6 +433,12 @@ _probe_done
     btfss ms_events, 0
     goto read_loop
     
+    comf ms_y_inc, f
+    
+    ;half the distance to smooth out
+    rrf  ms_x_inc, w
+    rrf  ms_y_inc, w
+    
     ;------------------------------------------------
     clrf    ms_send_bytes
     clrf    ms_send_bytes + 1
@@ -464,10 +470,6 @@ _probe_done
     
     btfsc   ms_btn, 2                  ;middle button
     bsf     ms_send_bytes + 3, 5
-    
-    ;half the distance to smooth out
-    rrf  ms_send_bytes + 1, w
-    rrf  ms_send_bytes + 2, w
     
     ; Send the bytes, should convert into 7N2 format
     DISABLE_INT
