@@ -3,7 +3,7 @@
 ;1Mhz = 1us (One instruction)
 ;5Mhz = 0.2us
 ;**********************************************************************
-;   PS/2 Mouse interface                                              *
+;   PS/2 to Serial (RS232) Mouse interface                                              *
 ;                                                                     *
 ;**********************************************************************
 ;                                                                     *
@@ -216,49 +216,49 @@ RESET_VECTOR    CODE    0x0000  ; processor reset vector
 INT_VECTOR      CODE    0x0004  ; interrupt vector location
 
 INTERRUPT
-      movwf tmp_int_w
-      ; Check what triggered the interrupt
-      banksel INTCON
-      btfsc INTCON, INTF
-      goto  _rts_int
-      goto  _int_done
-      
-_rts_int
-      banksel OPTION_REG
-      btfsc     OPTION_REG, INTEDG  ;check the type, if falling edge int will fire, rts is pulled high
-      goto _int_rts_stop
-      
+;      movwf tmp_int_w
+;      ; Check what triggered the interrupt
+;      banksel INTCON
+;      btfsc INTCON, INTF
+;      goto  _rts_int
+;      goto  _int_done
+;      
+;_rts_int
 ;      banksel OPTION_REG
-;      bsf     OPTION_REG, INTEDG
-      
-      ;btfsc   ms_serial_initialized, 0
-      ;goto    _int_done
-;            movlw 'O'
-;      pagesel TXPoll2
-;      call    TXPoll2
-      pagesel rs232_probe
-      call    rs232_probe
-      
-;      movlw 'P'
-;      pagesel TXPoll2
-;      call    TXPoll2
-      
-      goto    _int_rts_done
-      
-_int_rts_stop
-      bcf ms_serial_initialized, 0
-;      movlw 'U'
-;      pagesel TXPoll2
-;      call    TXPoll2
-      banksel OPTION_REG
-      bcf     OPTION_REG, INTEDG
-    
-_int_rts_done      
-    banksel INTCON
-    bcf     INTCON, INTF
-      
-_int_done
-    movf tmp_int_w, w
+;      btfsc     OPTION_REG, INTEDG  ;check the type, if falling edge int will fire, rts is pulled high
+;      goto _int_rts_stop
+;      
+;;      banksel OPTION_REG
+;;      bsf     OPTION_REG, INTEDG
+;      
+;      ;btfsc   ms_serial_initialized, 0
+;      ;goto    _int_done
+;;            movlw 'O'
+;;      pagesel TXPoll2
+;;      call    TXPoll2
+;      pagesel rs232_probe
+;      call    rs232_probe
+;      
+;;      movlw 'P'
+;;      pagesel TXPoll2
+;;      call    TXPoll2
+;      
+;      goto    _int_rts_done
+;      
+;_int_rts_stop
+;      bcf ms_serial_initialized, 0
+;;      movlw 'U'
+;;      pagesel TXPoll2
+;;      call    TXPoll2
+;      banksel OPTION_REG
+;      bcf     OPTION_REG, INTEDG
+;    
+;_int_rts_done      
+;    banksel INTCON
+;    bcf     INTCON, INTF
+;      
+;_int_done
+;    movf tmp_int_w, w
     retfie              ; return from interrupt
 
 MAIN_PROG       CODE
@@ -394,6 +394,7 @@ _probe_done
     btfsc ms_btn, 4
     bsf STATUS, C
     rlf ms_x_inc + 1, f
+    ;comf ms_x_inc, f
     
     movf    ms_y, w
     movwf   ms_y_inc
@@ -402,6 +403,7 @@ _probe_done
     btfsc ms_btn, 5
     bsf STATUS, C
     rlf ms_y_inc + 1, f
+    ;comf ms_y_inc, f
     
 ;    movf    ms_events, w
 ;    pagesel uart_print_hex
@@ -432,6 +434,7 @@ _probe_done
 ;    
     btfss ms_events, 0
     goto read_loop
+    
     
     comf ms_y_inc, f
     
@@ -476,8 +479,8 @@ _probe_done
     movlw   b'10000000'
     iorwf   ms_send_bytes, w
     movf    ms_send_bytes, w
-    pagesel TXPoll2
-    call    TXPoll2
+    pagesel TXPoll_sw
+    call    TXPoll_sw
     
     ;pagesel uart_print_hex
     ;call    uart_print_hex
@@ -485,26 +488,34 @@ _probe_done
     movlw   b'10000000'
     iorwf   ms_send_bytes + 1, w
     ;movf ms_send_bytes + 1, w
-    pagesel TXPoll2
-    call    TXPoll2
+    pagesel TXPoll_sw
+    call    TXPoll_sw
     ;pagesel uart_print_hex
     ;call    uart_print_hex
     
     movlw   b'10000000'
     iorwf   ms_send_bytes + 2, w
     ;movf ms_send_bytes + 2, w
-    pagesel TXPoll2
-    call    TXPoll2
+    pagesel TXPoll_sw
+    call    TXPoll_sw
     ;pagesel uart_print_hex
     ;call    uart_print_hex
     
-    ;movlw   b'10000000'
-    ;iorwf   ms_send_bytes + 3, w
-    movf ms_send_bytes + 3, w
-    pagesel TXPoll2
-    call    TXPoll2
+    ;check if the middle button is pressed and send 4th byte
+    
+;    btfss ms_btn, 2
+;    goto  _ms_trans_done
+    
+    movlw   b'10000000'
+    iorwf   ms_send_bytes + 3, w
+    ;movf ms_send_bytes + 3, w
+;    movlw b'10000000' | 0x20
+    pagesel TXPoll_sw
+    call    TXPoll_sw
     ;pagesel uart_print_hex
     ;call    uart_print_hex
+    
+;_ms_trans_done
     
     ENABLE_INT
     
@@ -608,18 +619,18 @@ rs232_probe
     call    delay_ms
     
     movlw  'M'
-    pagesel TXPoll2
-    call    TXPoll2
+    pagesel TXPoll_sw
+    call    TXPoll_sw
     
     movlw .63
     pagesel delay_ms
     call    delay_ms
     
     movlw  '3'
-    pagesel TXPoll2
-    call    TXPoll2
+    pagesel TXPoll_sw
+    call    TXPoll_sw
     
-    movlw .150
+    movlw .200
     pagesel delay_ms
     call    delay_ms
     
@@ -757,7 +768,7 @@ TXPoll
 	return
 ;-----------------------------
 ;Software serial TX, 7N1 format
-TXPoll2:                           ;4800bps
+TXPoll_sw:                           ;1200bps
         movwf   tdata
 	movlw   .7                 ;7N1
 	movwf   counter
