@@ -390,19 +390,30 @@ _probe_done
     movf    ms_x, w
     movwf   ms_x_inc
     
-    bcf STATUS, C
-    btfsc ms_btn, 4
-    bsf STATUS, C
-    rlf ms_x_inc + 1, f
+;    bcf STATUS, C
+;    btfsc ms_btn, 4
+;    bsf STATUS, C
+;    rlf ms_x_inc + 1, f
     ;comf ms_x_inc, f
     
     movf    ms_y, w
     movwf   ms_y_inc
     
-    bcf STATUS, C
+    ;set the values between -127 and +127
+    bcf  STATUS, C
+    btfsc ms_btn, 4
+    bsf STATUS, C
+    rrf  ms_x_inc, w
+    
+    bcf  STATUS, C
     btfsc ms_btn, 5
     bsf STATUS, C
-    rlf ms_y_inc + 1, f
+    rrf  ms_y_inc, w
+    
+;    bcf STATUS, C
+;    btfsc ms_btn, 5
+;    bsf STATUS, C
+;    rlf ms_y_inc + 1, f
     ;comf ms_y_inc, f
     
 ;    movf    ms_events, w
@@ -437,10 +448,6 @@ _probe_done
     
     
     comf ms_y_inc, f
-    
-    ;half the distance to smooth out
-    rrf  ms_x_inc, w
-    rrf  ms_y_inc, w
     
     ;------------------------------------------------
     clrf    ms_send_bytes
@@ -503,19 +510,19 @@ _probe_done
     
     ;check if the middle button is pressed and send 4th byte
     
-;    btfss ms_btn, 2
-;    goto  _ms_trans_done
+    btfss ms_btn, 2
+    goto  _ms_trans_done
     
-    movlw   b'10000000'
-    iorwf   ms_send_bytes + 3, w
-    ;movf ms_send_bytes + 3, w
-;    movlw b'10000000' | 0x20
+;    movlw   b'10000000'
+;    iorwf   ms_send_bytes + 3, w
+;    movf ms_send_bytes + 3, w
+    movlw b'10000000' | 0x20
     pagesel TXPoll_sw
     call    TXPoll_sw
     ;pagesel uart_print_hex
     ;call    uart_print_hex
     
-;_ms_trans_done
+_ms_trans_done
     
     ENABLE_INT
     
@@ -630,7 +637,7 @@ rs232_probe
     pagesel TXPoll_sw
     call    TXPoll_sw
     
-    movlw .200
+    movlw .100
     pagesel delay_ms
     call    delay_ms
     
