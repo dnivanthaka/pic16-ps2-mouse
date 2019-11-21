@@ -281,19 +281,7 @@ start
     pagesel  ms_init
     call     ms_init
     
-    ;movlw PS2_CMD_DIS_DAT_RPT
-    ;pagesel ms_write
-    ;call    ms_write
-    
-    ;pagesel ms_read
-    ;call    ms_read
-    
-;    movlw 'X'
-;    pagesel TXPoll2
-;    call    TXPoll2
-    
-    ;movlw PS2_CMD_EN_DAT_RPT
-    movlw 0xF0
+    movlw   PS2_CMD_SET_DAT_REMOTE
     pagesel ms_write
     call    ms_write
     
@@ -328,18 +316,7 @@ read_loop
     btfss   RS232_RTS_PORT, RS232_RTS_PIN
     goto    _probe_do
     goto    _init_reset
-    
-;    bsf     ms_serial_initialized, 0
-;    
-;    pagesel RS232_RTS_PORT
-;    btfsc   RS232_RTS_PORT, RS232_RTS_PIN
-;    goto    $-1
-;    
-    
-;    btfsc   ms_serial_initialized, 0
-;    goto    _probe_do
-;    goto    _probe_done
-;    
+   
 _probe_do
     btfsc   ms_serial_initialized, 0
     goto    _probe_done
@@ -363,7 +340,7 @@ _probe_done
     
     DISABLE_INT
     
-    movlw 0xEB
+    movlw   PS2_CMD_READ_DATA
     pagesel ms_write
     call    ms_write
     
@@ -552,7 +529,7 @@ ms_init
     
     DISABLE_INT
     
-    movlw   0xff
+    movlw   PS2_CMD_RESET
     pagesel ms_write
     call    ms_write
     
@@ -596,7 +573,7 @@ ms_init
     pagesel ms_read
     call    ms_read
     
-    movlw   0xF2
+    movlw   PS2_CMD_GET_ID
     pagesel ms_write
     call    ms_write
     
@@ -606,7 +583,7 @@ ms_init
     pagesel ms_read
     call    ms_read
     
-    movlw   0xF6
+    movlw   PS2_CMD_DEFAULT
     pagesel ms_write
     call    ms_write
     
@@ -615,8 +592,7 @@ ms_init
     
     ENABLE_INT
     
-    movlw   0x01
-    movwf   ms_ps2_initialized
+    bsf   ms_ps2_initialized, 0
     
     return
     
