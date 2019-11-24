@@ -552,7 +552,7 @@ ms_init
     pagesel ms_read
     call    ms_read
     
-    movlw   0x64                        ;100
+    movlw   0xc8                        ;100
     pagesel ms_write
     call    ms_write
     
@@ -566,7 +566,7 @@ ms_init
     pagesel ms_read
     call    ms_read
     
-    movlw   0x02
+    movlw   0x03                        ;8mm
     pagesel ms_write
     call    ms_write
     
@@ -583,12 +583,12 @@ ms_init
     pagesel ms_read
     call    ms_read
     
-    movlw   PS2_CMD_DEFAULT
-    pagesel ms_write
-    call    ms_write
-    
-    pagesel ms_read
-    call    ms_read
+;    movlw   PS2_CMD_DEFAULT
+;    pagesel ms_write
+;    call    ms_write
+;    
+;    pagesel ms_read
+;    call    ms_read
     
     ENABLE_INT
     
