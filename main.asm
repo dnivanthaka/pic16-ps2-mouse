@@ -329,9 +329,9 @@ _probe_do
     bcf     ms_serial_initialized, 0
 _probe_done
     
-    movlw .100
-    pagesel delay_ms
-    call    delay_ms
+    ;movlw .100
+    ;pagesel delay_ms
+    ;call    delay_ms
     
     btfss   ms_serial_initialized, 0
     goto    read_loop
@@ -567,6 +567,27 @@ ms_init
     call    ms_read
     
     movlw   0x03                        ;8mm
+    pagesel ms_write
+    call    ms_write
+    
+    pagesel ms_read
+    call    ms_read
+    
+    movlw   PS2_CMD_SET_SCALE_1_1                       
+    pagesel ms_write
+    call    ms_write
+    
+    pagesel ms_read
+    call    ms_read
+    
+    movlw   PS2_CMD_SET_RATE
+    pagesel ms_write
+    call    ms_write
+    
+    pagesel ms_read
+    call    ms_read
+    
+    movlw   0x28                        ;40 - reduced
     pagesel ms_write
     call    ms_write
     
